@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Project Structure
 
-## Getting Started
+This document outlines the folder structure of the project to help contributors navigate the codebase efficiently.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Root Structure
+
+```
+src/
+├── app/
+├── components/
+├── constants/
+├── context/
+├── utils/
+├── hooks/
+├── types/
+├── styles/
+└── config/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Detailed Breakdown
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### `app/`
+Contains all Next.js pages and routing logic.
 
-## Learn More
+```
+app/
+├── auth/
+│   └── login/
+│       └── page.tsx         # Login page
+│
+├── authenticated/           # All protected/authenticated routes
+│   ├── dashboard/           # Dashboard page
+│   ├── department/          # Department management page
+│   ├── projects/            # Projects listing page
+│   ├── project-tasks/       # Project tasks page
+│   └── timesheet/           # Timesheet page
+│
+└── layout.tsx               # Root layout wrapper
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### `components/`
+Reusable UI components organized by feature and shared utilities.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+components/
+├── dashboard/               # Components specific to the dashboard
+├── department/              # Components specific to department management
+├── project/                 # Components specific to projects
+├── projectTask/             # Components specific to project tasks
+├── timesheet/               # Components specific to timesheets
+│
+├── shared/                  # Shared components used across multiple features
+│   ├── Table.tsx            # Generic reusable table component
+│   ├── Modal.tsx            # Generic modal/dialog component
+│   └── Pagination.tsx       # Pagination component
+│
+└── ui/                      # Base-level UI primitives
+    ├── Button.tsx            # Button component
+    ├── Input.tsx             # Input field component
+    └── Badge.tsx             # Badge/tag component
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### `constants/`
+Application-wide constant values.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+constants/
+└── validation/              # Validation rules and error messages
+```
+
+---
+
+### `context/`
+React Context providers for global state management across the application.
+
+---
+
+### `utils/`
+Utility functions and helpers.
+
+```
+utils/
+└── api/                     # API helper functions and request handlers
+```
+
+---
+
+### `hooks/`
+Custom React hooks for reusable stateful logic across components.
+
+---
+
+### `types/`
+TypeScript type definitions and interfaces shared across the application.
+
+---
+
+### `styles/`
+Global styles, theme variables, and shared CSS/SCSS files.
+
+---
+
+### `config/`
+Application configuration files (e.g., environment setup, constants, third-party config).
+
+---
+
+## Contributing
+
+- Feature-specific components go inside their respective folder under `components/`.
+- Shared/reusable components go inside `components/shared/` or `components/ui/`.
+- All API calls should be handled inside `utils/api/`.
+- TypeScript types/interfaces should be defined in `types/` and imported where needed.
+- New pages must be created under `app/authenticated/` (for protected routes) or `app/auth/` (for public routes).
