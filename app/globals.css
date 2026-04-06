@@ -1,26 +1,246 @@
-@import "tailwindcss";
+/* ============================================
+   TEAMSYNC LOGIN PAGE STYLES
+   Append this block to your app/globals.css
+   ============================================ */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------- Root / Layout ---------- */
+.ts-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f0eef8;
+  font-family: "Segoe UI", sans-serif;
+  color: #1a1a2e;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ---------- Navbar ---------- */
+.ts-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.ts-nav-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: -0.3px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.ts-nav-actions {
+  display: flex;
+  gap: 8px;
 }
+
+.ts-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #d0cce8;
+  background: white;
+  color: #6b63a0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ts-icon-btn:hover {
+  border-color: #7c5cbf;
+  background: #f5f3ff;
+}
+
+/* ---------- Main ---------- */
+.ts-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 48px 24px;
+}
+
+/* ---------- Orb ---------- */
+.ts-orb-wrap {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ts-orb-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(124, 92, 191, 0.15);
+}
+.ts-ring-1 { width: 100px; height: 100px; }
+.ts-ring-2 { width: 130px; height: 130px; }
+.ts-ring-3 { width: 160px; height: 160px; }
+
+.ts-orb {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(109, 40, 217, 0.35), 0 0 0 8px rgba(109, 40, 217, 0.08);
+  animation: ts-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ts-pulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(109, 40, 217, 0.35), 0 0 0 8px rgba(109, 40, 217, 0.08); }
+  50%       { box-shadow: 0 8px 40px rgba(109, 40, 217, 0.5),  0 0 0 16px rgba(109, 40, 217, 0.04); }
+}
+
+/* ---------- Heading ---------- */
+.ts-heading {
+  text-align: center;
+}
+
+.ts-title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  color: #0f0f1a;
+  margin: 0;
+  line-height: 1;
+}
+
+.ts-subtitle {
+  font-size: 0.95rem;
+  color: #6b6b8a;
+  margin: 6px 0 0;
+  letter-spacing: 0.3px;
+}
+
+/* ---------- Form ---------- */
+.ts-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.ts-input-wrap {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50px;
+  padding: 6px 6px 6px 20px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  width: 100%;
+  gap: 10px;
+}
+
+.ts-input-icon {
+  color: #a0a0bc;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.ts-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: #1a1a2e;
+  flex: 1;
+  min-width: 0;
+}
+.ts-input::placeholder { color: #b0b0c8; }
+
+.ts-btn {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+.ts-btn:hover   { opacity: 0.9; transform: translateY(-1px); }
+.ts-btn:active  { transform: translateY(0); }
+.ts-btn--loading { opacity: 0.7; cursor: not-allowed; }
+
+.ts-login-hint {
+  font-size: 0.85rem;
+  color: #8888a8;
+  margin: 0;
+}
+
+.ts-link {
+  color: #7c5cbf;
+  font-weight: 600;
+  text-decoration: none;
+}
+.ts-link:hover { text-decoration: underline; }
+
+/* ---------- Badge ---------- */
+.ts-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ts-badge-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.ts-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+.ts-dot--off { background: #d0cce8; }
+.ts-dot--on  { background: #6d28d9; }
+
+.ts-badge-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #9090b0;
+  text-transform: uppercase;
+}
+
+/* ---------- Footer ---------- */
+.ts-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  font-size: 0.78rem;
+  color: #9090b0;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ts-footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.ts-footer-links a {
+  color: #9090b0;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.ts-footer-links a:hover { color: #6d28d9; }
