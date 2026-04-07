@@ -6,8 +6,9 @@ import StepLanding from "../auth/stepLanding";
 import StepVerify  from "../auth/StepVerify";
 import StepSecure  from "../auth/StepSecure";
 import StepLogin   from "../auth/StepLogin";
+import ForgotPassword from "../auth/ForgotPassword";
 
-type Step = "landing" | "verify" | "secure" | "login";
+type Step = "landing" | "verify" | "secure" | "login" | "forgot";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,5 +29,15 @@ export default function LoginPage() {
   if (step === "secure")
     return <StepSecure email={email} onNext={() => setStep("login")} />;
 
-  return <StepLogin email={email} onNext={() => router.push("/authenticated/dashboard")} onBack={() => setStep("landing")} />;
+  if (step === "forgot")
+    return <ForgotPassword onBack={() => setStep("login")} />;
+
+  return (
+    <StepLogin
+      email={email}
+      onNext={() => router.push("/authenticated/dashboard")}
+      onBack={() => setStep("landing")}
+      onForgot={() => setStep("forgot")}
+    />
+  );
 }
