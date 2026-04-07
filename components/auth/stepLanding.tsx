@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AlertCircle, Aperture } from "lucide-react";
 import { authApi } from "@/utils/api";
 
 type Step = "landing" | "verify" | "secure" | "login";
@@ -10,17 +11,22 @@ interface Props {
 }
 
 export default function StepLanding({ onNext }: Props) {
-  const [email, setEmail]   = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState("");
+  const [error, setError] = useState("");
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail.endsWith("@primaverse.com")) {
+      setError("Only @primaverse.com email addresses are allowed.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
-      await authApi.initiateRegister(email);
-      onNext(email);
+      await authApi.initiateRegister(normalizedEmail);
+      onNext(normalizedEmail);
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
@@ -38,13 +44,7 @@ export default function StepLanding({ onNext }: Props) {
           <div className="landing-orb-ring landing-ring-2" />
           <div className="landing-orb-ring landing-ring-1" />
           <div className="landing-orb">
-            <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-              <path d="M18 8c-3 0-5.5 1.3-7.3 3.3" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M10 18a8 8 0 0 0 8 8" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.5" />
-              <path d="M18 28c3 0 5.5-1.3 7.3-3.3" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M26 18a8 8 0 0 0-8-8" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.5" />
-              <circle cx="18" cy="18" r="3" fill="white" />
-            </svg>
+            <Aperture size={28} color="white" aria-hidden="true" />
           </div>
         </div>
 
@@ -59,9 +59,12 @@ export default function StepLanding({ onNext }: Props) {
             <input
               type="email"
               className="landing-input-field"
-              placeholder="Your Email"
+              placeholder="your email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setError(""); }}
+              onChange={(e) => { setEmail(e.target.value.toLowerCase().replace(/\d/g, "")); setError(""); }}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               required
             />
             <button type="submit" className="landing-btn-verify" disabled={loading}>
@@ -71,9 +74,7 @@ export default function StepLanding({ onNext }: Props) {
 
           {error && (
             <p className="auth-error" style={{ marginBottom: 10, borderRadius: 999 }}>
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="var(--color-error)">
-                <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
+              <AlertCircle size={14} color="var(--color-error)" aria-hidden="true" />
               {error}
             </p>
           )}
