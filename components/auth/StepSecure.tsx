@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { authApi } from "@/utils/api";
 
 // ─── Eye icons ────────────────────────────────────────────────────────────────
 const EyeOpen = () => (
@@ -34,26 +35,35 @@ function getStrength(pw: string): { label: string; level: number; color: string 
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface Props {
+  email: string;
   onNext?: () => void;
 }
 
-export default function StepSecure({ onNext }: Props) {
-  const [pw, setPw]           = useState("");
-  const [cf, setCf]           = useState("");
-  const [showPw, setShowPw]   = useState(false);
-  const [showCf, setShowCf]   = useState(false);
-  const [error, setError]     = useState("");
-  const [loading, setLoading] = useState(false);
+export default function StepSecure({ email, onNext }: Props) {
+  const [fullName, setFullName] = useState("");
+  const [pw, setPw]             = useState("");
+  const [cf, setCf]             = useState("");
+  const [showPw, setShowPw]     = useState(false);
+  const [showCf, setShowCf]     = useState(false);
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
 
   const strength = getStrength(pw);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (pw !== cf)          { setError("Passwords do not match."); return; }
     if (strength.level < 2) { setError("Please choose a stronger password."); return; }
     setError("");
     setLoading(true);
-    setTimeout(() => { setLoading(false); onNext?.(); }, 1000);
+    try {
+      await authApi.completeRegister(email, fullName, pw);
+      onNext?.();
+    } catch (err: any) {
+      setError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,10 +80,24 @@ export default function StepSecure({ onNext }: Props) {
 
         <h1 className="auth-title">Secure Your Account</h1>
         <p className="auth-sub">
-          Choose a sophisticated password to<br />protect your digital workspace.
+          One last step — set your name<br />and a strong password.
         </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
+
+          {/* Full name */}
+          <div className="auth-field">
+            <label className="auth-label">Full Name</label>
+            <input
+              type="text"
+              className={`auth-input${fullName ? " has-value" : ""}`}
+              placeholder="Jane Doe"
+              value={fullName}
+              onChange={(e) => { setFullName(e.target.value); setError(""); }}
+              required
+              autoComplete="name"
+            />
+          </div>
 
           {/* New password */}
           <div className="auth-field">
@@ -153,7 +177,7 @@ export default function StepSecure({ onNext }: Props) {
           <button
             type="submit"
             className="auth-btn"
-            disabled={loading || !pw || !cf}
+            disabled={loading || !fullName || !pw || !cf}
           >
             {loading ? (
               <><div className="auth-spinner" /> Setting up...</>
@@ -162,7 +186,6 @@ export default function StepSecure({ onNext }: Props) {
             )}
           </button>
 
-          {/* Hint */}
           <p className="auth-hint">
             <svg width="13" height="13" viewBox="0 0 20 20" fill="var(--color-text-faint)">
               <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />

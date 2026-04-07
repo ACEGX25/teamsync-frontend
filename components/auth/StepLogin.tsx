@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { authApi } from "@/utils/api";
 
 // ─── Eye icons ────────────────────────────────────────────────────────────────
 const EyeOpen = () => (
@@ -30,11 +31,21 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
   const [pw, setPw]           = useState("");
   const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    setTimeout(() => { setLoading(false); onNext?.(); }, 1000);
+    try {
+      await authApi.login(mail, pw);
+      onNext?.();
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password.");
+      setPw("");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,7 +68,7 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
               className={`auth-input${mail ? " has-value" : ""}`}
               placeholder="name@atelier.com"
               value={mail}
-              onChange={(e) => setMail(e.target.value)}
+              onChange={(e) => { setMail(e.target.value); setError(""); }}
               required
               autoComplete="email"
             />
@@ -75,7 +86,7 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
                 className={`auth-input${pw ? " has-value" : ""}`}
                 placeholder="••••••••"
                 value={pw}
-                onChange={(e) => setPw(e.target.value)}
+                onChange={(e) => { setPw(e.target.value); setError(""); }}
                 required
                 autoComplete="current-password"
               />
@@ -84,6 +95,16 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
               </button>
             </div>
           </div>
+
+          {/* Error */}
+          {error && (
+            <p className="auth-error">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="var(--color-error)">
+                <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {error}
+            </p>
+          )}
 
           {/* Submit */}
           <button
@@ -106,7 +127,6 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
             <div className="auth-divider-line" />
           </div>
 
-          {/* Back to landing */}
           <p className="auth-hint">
             <button type="button" className="auth-link" onClick={onBack}>
               Join TeamSync now
