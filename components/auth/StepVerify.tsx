@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { ArrowRight, Clock3, LockKeyhole, ShieldCheck } from "lucide-react";
 
 interface Props {
   email?: string;
@@ -12,6 +13,10 @@ export default function StepVerify({ email = "your registered device", onNext }:
   const [timer, setTimer] = useState(114);
   const [loading, setLoading] = useState(false);
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    inputs.current[0]?.focus();
+  }, []);
 
   useEffect(() => {
     if (timer <= 0) return;
@@ -59,10 +64,7 @@ export default function StepVerify({ email = "your registered device", onNext }:
 
         {/* Shield */}
         <div className="auth-shield">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2z" fill="var(--color-brand)" />
-            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <ShieldCheck size={24} fill="var(--color-brand)" color="white" aria-hidden="true" />
         </div>
 
         <h1 className="auth-title">Verify Identity</h1>
@@ -93,9 +95,7 @@ export default function StepVerify({ email = "your registered device", onNext }:
           {/* Timer */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <p className="auth-timer-row">
-              <svg className="auth-timer-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-              </svg>
+              <Clock3 className="auth-timer-icon" size={16} aria-hidden="true" />
               Resend code in&nbsp;<span className="auth-timer-val">{fmt(timer)}</span>
             </p>
             <div className="auth-resend-row">
@@ -103,7 +103,11 @@ export default function StepVerify({ email = "your registered device", onNext }:
                 <button
                   type="button"
                   className="auth-resend-active"
-                  onClick={() => { setTimer(114); setOtp(Array(6).fill("")); }}
+                  onClick={() => {
+                    setTimer(114);
+                    setOtp(Array(6).fill(""));
+                    inputs.current[0]?.focus();
+                  }}
                 >
                   Resend Code
                 </button>
@@ -122,22 +126,20 @@ export default function StepVerify({ email = "your registered device", onNext }:
             {loading ? (
               <><div className="auth-spinner" /> Verifying...</>
             ) : (
-              <>Verify &amp; Sign In <span style={{ fontSize: 18 }}>→</span></>
+              <>Verify &amp; Sign In <ArrowRight size={18} aria-hidden="true" /></>
             )}
           </button>
         </form>
 
         {/* Encrypted badge */}
         <p className="auth-encrypt">
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-          </svg>
+          <LockKeyhole size={12} aria-hidden="true" />
           End-to-end encrypted verification
         </p>
       </div>
 
       <footer className="auth-footer">
-        <span>© 2024 TeamSync Digital Atelier. All rights reserved.</span>
+        <span>© 2026 TeamSync Digital Atelier. All rights reserved.</span>
         <div className="auth-footer-links">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type React from "react";
+import { ArrowRight, Eye, EyeOff, Info, Lock } from "lucide-react";
 
 export default function SetPasword() {
 	const [newPassword, setNewPassword] = useState("");
@@ -45,12 +46,7 @@ export default function SetPasword() {
 			<main className="sp-main">
 				<section className="sp-card" aria-label="Set password form">
 					<div className="sp-lock-badge" aria-hidden="true">
-						<svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-							<path
-								d="M17 10h-1V8a4 4 0 1 0-8 0v2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V8Z"
-								fill="currentColor"
-							/>
-						</svg>
+						<Lock size={18} aria-hidden="true" />
 					</div>
 
 					<header className="sp-header">
@@ -77,10 +73,7 @@ export default function SetPasword() {
 								aria-label={showNewPassword ? "Hide password" : "Show password"}
 								onClick={() => setShowNewPassword((v) => !v)}
 							>
-								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-									<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
-									<circle cx="12" cy="12" r="2.8" />
-								</svg>
+								{showNewPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
 							</button>
 						</div>
 
@@ -116,35 +109,25 @@ export default function SetPasword() {
 								aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"}
 								onClick={() => setShowConfirmPassword((v) => !v)}
 							>
-								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-									<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
-									<circle cx="12" cy="12" r="2.8" />
-								</svg>
+								{showConfirmPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
 							</button>
 						</div>
 
 						<button className="sp-submit" type="submit">
 							<span>Complete Setup</span>
-							<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-								<path d="M5 12h14" />
-								<path d="m13 5 7 7-7 7" />
-							</svg>
+							<ArrowRight size={18} aria-hidden="true" />
 						</button>
 					</form>
 
 					<p className="sp-hint">
-						<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-							<circle cx="12" cy="12" r="9" />
-							<path d="M12 11v5" />
-							<path d="M12 8h.01" />
-						</svg>
+						<Info size={12} aria-hidden="true" />
 						<span>Min 8 characters, 1 uppercase, 1 symbol</span>
 					</p>
 					<a href="#" className="sp-help">Need assistance?</a>
 				</section>
 			</main>
 
-			<footer className="sp-footer">© 2024 TeamSync Digital Atelier. All rights reserved.</footer>
+			<footer className="sp-footer">© 2026 TeamSync Digital Atelier. All rights reserved.</footer>
 		</div>
 	);
 }
