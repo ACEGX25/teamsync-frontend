@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { authApi } from "@/utils/api";
 
 interface Props {
-  email?: string;
+  email: string;
   onNext?: () => void;
 }
 
-export default function StepVerify({ email = "your registered device", onNext }: Props) {
-  const [otp, setOtp] = useState(Array(6).fill(""));
-  const [timer, setTimer] = useState(114);
+export default function StepVerify({ email, onNext }: Props) {
+  const [otp, setOtp]       = useState(Array(6).fill(""));
+  const [timer, setTimer]   = useState(114);
   const [loading, setLoading] = useState(false);
+  const [error, setError]   = useState("");
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export default function StepVerify({ email = "your registered device", onNext }:
     const next = [...otp];
     next[idx] = val;
     setOtp(next);
+    setError("");
     if (val && idx < 5) inputs.current[idx + 1]?.focus();
   };
 
@@ -45,10 +48,31 @@ export default function StepVerify({ email = "your registered device", onNext }:
     inputs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleResend = async () => {
+    setError("");
+    try {
+      await authApi.initiateRegister(email);
+      setTimer(114);
+      setOtp(Array(6).fill(""));
+    } catch (err: any) {
+      setError(err.message || "Failed to resend OTP.");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    setTimeout(() => { setLoading(false); onNext?.(); }, 1200);
+    try {
+      await authApi.verifyRegisterOtp(email, otp.join(""));
+      onNext?.();
+    } catch (err: any) {
+      setError(err.message || "Invalid OTP. Please try again.");
+      setOtp(Array(6).fill(""));
+      inputs.current[0]?.focus();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isComplete = otp.join("").length === 6;
@@ -68,7 +92,7 @@ export default function StepVerify({ email = "your registered device", onNext }:
         <h1 className="auth-title">Verify Identity</h1>
         <p className="auth-sub">
           We&apos;ve sent a 6-digit verification code<br />
-          to your registered device.
+          to <strong>{email}</strong>
         </p>
 
         <form onSubmit={handleSubmit} style={{ width: "100%" }}>
@@ -90,6 +114,16 @@ export default function StepVerify({ email = "your registered device", onNext }:
             ))}
           </div>
 
+          {/* Error */}
+          {error && (
+            <p className="auth-error" style={{ marginBottom: 16 }}>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="var(--color-error)">
+                <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {error}
+            </p>
+          )}
+
           {/* Timer */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <p className="auth-timer-row">
@@ -100,11 +134,7 @@ export default function StepVerify({ email = "your registered device", onNext }:
             </p>
             <div className="auth-resend-row">
               {timer === 0 ? (
-                <button
-                  type="button"
-                  className="auth-resend-active"
-                  onClick={() => { setTimer(114); setOtp(Array(6).fill("")); }}
-                >
+                <button type="button" className="auth-resend-active" onClick={handleResend}>
                   Resend Code
                 </button>
               ) : (
@@ -114,11 +144,7 @@ export default function StepVerify({ email = "your registered device", onNext }:
           </div>
 
           {/* Submit */}
-          <button
-            type="submit"
-            className="auth-btn"
-            disabled={!isComplete || loading}
-          >
+          <button type="submit" className="auth-btn" disabled={!isComplete || loading}>
             {loading ? (
               <><div className="auth-spinner" /> Verifying...</>
             ) : (
@@ -127,7 +153,6 @@ export default function StepVerify({ email = "your registered device", onNext }:
           </button>
         </form>
 
-        {/* Encrypted badge */}
         <p className="auth-encrypt">
           <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
