@@ -44,130 +44,125 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="ts-root">
+    <div className="auth-page">
 
-      {/* NAV */}
-      <nav className="ts-nav">
-        <span className="ts-nav-brand">TeamSync</span>
-        <div className="ts-nav-actions">
-          <button className="ts-icon-btn" title="Help">?</button>
-          <button className="ts-icon-btn" title="Info">i</button>
-        </div>
-      </nav>
+      {/* STEP: EMAIL */}
+      {step === "email" ? (
+        <div className="auth-card">
 
-      {/* MAIN */}
-      <main className="ts-main">
+          {/* Orb */}
+          <div className="landing-orb-wrap">
+            <span className="landing-orb-ring landing-ring-3" />
+            <span className="landing-orb-ring landing-ring-2" />
+            <span className="landing-orb-ring landing-ring-1" />
+            <div className="landing-orb">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+          </div>
 
-        {step === "email" ? (
-          <div className="ts-step">
-            {/* Orb */}
-            <div className="ts-orb-wrap">
-              <span className="ts-orb-ring ts-ring-3" />
-              <span className="ts-orb-ring ts-ring-2" />
-              <span className="ts-orb-ring ts-ring-1" />
-              <div className="ts-orb">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
+          {/* Heading */}
+          <h1 className="auth-title">Welcome back.</h1>
+          <p className="auth-sub">Enter your details to access your workspace.</p>
+
+          {/* Form */}
+          <form className="auth-form" onSubmit={handleSendOtp}>
+            <div className="auth-field">
+              <label className="auth-label">Email Address</label>
+              <input
+                className="auth-input"
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail((e.target.value ?? "").toLowerCase())}
+                required
+                autoFocus
+              />
             </div>
 
-            {/* Heading */}
-            <div className="ts-heading">
-              <h1 className="ts-title">Welcome back.</h1>
-              <p className="ts-subtitle">Enter your details to access your workspace.</p>
-            </div>
+            <button className="auth-btn" type="submit" disabled={loading}>
+              {loading && <span className="auth-spinner" />}
+              {loading ? "Sending…" : "Send Code →"}
+            </button>
 
-            {/* Form */}
-            <form className="ts-form" onSubmit={handleSendOtp}>
-              <div className="ts-input-wrap">
-                <span className="ts-input-icon">✉</span>
-                <input
-                  className="ts-input"
-                  type="email"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoFocus
-                />
-                <button className="ts-btn" type="submit" disabled={loading}>
-                  {loading && <span className="ts-spinner" />}
-                  {loading ? "Sending…" : "Send Code"}
-                </button>
-              </div>
-
-              <p className="ts-login-hint">
-                Don&apos;t have an account?{" "}
-                <a href="/register" className="ts-link">Join now</a>
-              </p>
-            </form>
+            <p className="auth-hint">
+              Don&apos;t have an account?{" "}
+              <a href="/register" className="auth-link">Join now</a>
+            </p>
 
             {/* Badge */}
-            <div className="ts-badge">
-              <div className="ts-badge-dots">
-                <span className="ts-dot ts-dot--on" />
-                <span className="ts-dot ts-dot--on" />
-                <span className="ts-dot ts-dot--off" />
-                <span className="ts-dot ts-dot--off" />
-              </div>
-              <span className="ts-badge-text">14 online now</span>
+            <div className="landing-badge">
+              <span className="landing-dot landing-dot--on" />
+              <span className="landing-badge-text">14 online now</span>
             </div>
+          </form>
+        </div>
+
+      ) : (
+
+        /* STEP: OTP */
+        <div className="auth-card">
+          <div className="auth-shield">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2z" fill="var(--color-brand)" />
+              <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
-        ) : (
-          <div className="ts-step">
-            {/* Heading */}
-            <div className="ts-heading">
-              <h1 className="ts-title">Check your email.</h1>
-              <p className="ts-subtitle">We sent a 6-digit code to <strong>{email}</strong></p>
+
+          <h1 className="auth-title">Check your email.</h1>
+          <p className="auth-sub">
+            We sent a 6-digit code to <strong>{email}</strong>
+          </p>
+
+          <form className="auth-form" onSubmit={handleVerify}>
+            <div className="auth-otp-row">
+              {otp.map((digit, idx) => (
+                <input
+                  key={idx}
+                  id={`otp-${idx}`}
+                  className={`auth-otp-box${digit ? " filled" : ""}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(e.target.value, idx)}
+                  onKeyDown={(e) => handleOtpKeyDown(e, idx)}
+                  autoFocus={idx === 0}
+                />
+              ))}
             </div>
 
-            {/* OTP Form */}
-            <form className="ts-form" onSubmit={handleVerify}>
-              <div className="ts-otp-row">
-                {otp.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    id={`otp-${idx}`}
-                    className="ts-otp-input"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(e.target.value, idx)}
-                    onKeyDown={(e) => handleOtpKeyDown(e, idx)}
-                    autoFocus={idx === 0}
-                  />
-                ))}
-              </div>
+            <p className="auth-hint">
+              Didn&apos;t receive it?{" "}
+              <button type="button" className="auth-link">Resend code</button>
+            </p>
 
-              <p className="ts-otp-hint">
-                Didn&apos;t receive it?{" "}
-                <button type="button" className="ts-otp-resend">Resend code</button>
-              </p>
+            <button
+              className="auth-btn"
+              type="submit"
+              disabled={loading || otp.join("").length < 6}
+            >
+              {loading && <span className="auth-spinner" />}
+              {loading ? "Verifying…" : "Verify & Sign In →"}
+            </button>
 
-              <button
-                className="ts-btn ts-btn--full"
-                type="submit"
-                disabled={loading || otp.join("").length < 6}
-              >
-                {loading && <span className="ts-spinner" />}
-                {loading ? "Verifying…" : "Verify & Sign In"}
-              </button>
-
-              <button type="button" className="ts-back-btn" onClick={() => setStep("email")}>
-                ← Back
-              </button>
-            </form>
-          </div>
-        )}
-
-      </main>
+            <button
+              type="button"
+              className="auth-link"
+              style={{ textAlign: "center" }}
+              onClick={() => setStep("email")}
+            >
+              ← Back
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* FOOTER */}
-      <footer className="ts-footer">
+      <footer className="auth-footer">
         <span>© 2024 TeamSync Digital Atelier. All rights reserved.</span>
-        <div className="ts-footer-links">
+        <div className="auth-footer-links">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>
           <a href="#">Security</a>
