@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "tabler",
+    "shadcn",
+    "teamsync",
+    "atelier",
+    "prisma",
+    "nextjs"
+  ],
+  "ignoreWords": [],
+  "ignorePaths": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build"
+  ]
+}
