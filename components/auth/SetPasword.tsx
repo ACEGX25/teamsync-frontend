@@ -106,7 +106,7 @@ export default function SetPasword() {
 								type={showConfirmPassword ? "text" : "password"}
 								value={confirmPassword}
 								onChange={(e) => setConfirmPassword(e.target.value)}
-								placeholder=""
+								placeholder="Retype the Password"
 								autoComplete="new-password"
 								required
 							/>
@@ -117,8 +117,8 @@ export default function SetPasword() {
 								onClick={() => setShowConfirmPassword((v) => !v)}
 							>
 								<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-									<path d="M3 12a9 9 0 1 0 3-6.7" />
-									<path d="M3 4v5h5" />
+									<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+									<circle cx="12" cy="12" r="2.8" />
 								</svg>
 							</button>
 						</div>
