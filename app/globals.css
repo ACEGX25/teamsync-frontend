@@ -37,6 +37,29 @@
   --color-success:         #8b5cf6;
   --color-optimal:         #6d28d9;
 
+  /* Dashboard palette */
+  --color-db-icon-on-color: #ffffff;
+  --color-db-activity-edit: #8b5cf6;
+  --color-db-activity-join: #3b82f6;
+  --color-db-activity-archive: #f59e0b;
+  --color-db-activity-success: #10b981;
+  --color-db-stats-members-icon: #7c3aed;
+  --color-db-stats-members-bg: #f0ebff;
+  --color-db-stats-messages-icon: #059669;
+  --color-db-stats-messages-bg: #ecfdf5;
+  --color-db-stats-integrations-icon: #7c3aed;
+  --color-db-stats-integrations-bg: #f5f3ff;
+  --color-db-stats-sync-icon: #0ea5e9;
+  --color-db-stats-sync-bg: #f0f9ff;
+  --color-db-avatar-gradient-start: #a78bfa;
+  --color-db-avatar-gradient-end: #7c3aed;
+  --color-db-avatar-green-start: #6ee7b7;
+  --color-db-avatar-green-end: #059669;
+  --color-db-avatar-red-start: #fca5a5;
+  --color-db-avatar-red-end: #e11d48;
+  --color-db-quick-icon-primary-bg: rgba(109, 40, 217, 0.15);
+  --color-db-quick-icon-secondary-bg: #ece9f8;
+
   /* Radius */
   --radius-page:     28px;
   --radius-input:    12px;

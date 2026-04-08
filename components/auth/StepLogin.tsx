@@ -2,26 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowRight, Check, Eye, EyeOff, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Eye, EyeOff  } from "lucide-react";
 import { authApi } from "@/utils/api";
-
-const PRIMAVERSE_EMAIL_REGEX = /^[a-z]+@primaverse\.com$/;
-
-function sanitizePrimaverseEmailInput(raw: string): string {
-  const lowered = raw.toLowerCase();
-  const [localPart = "", ...rest] = lowered.split("@");
-  const cleanLocalPart = localPart.replace(/[^a-z]/g, "");
-  if (rest.length === 0) return cleanLocalPart;
-  const cleanDomain = rest.join("@").replace(/[^a-z.]/g, "");
-  return `${cleanLocalPart}@${cleanDomain}`;
-}
-
-function toPrimaverseEmail(raw: string): string {
-  const sanitized = sanitizePrimaverseEmailInput(raw);
-  const [localPart = "", domain] = sanitized.split("@");
-  if (!localPart) return "";
-  return `${localPart}@${domain || "primaverse.com"}`;
-}
+import Footer from "@/shared/Footer";
+import {
+  isPrimaverseEmail,
+  sanitizePrimaverseEmailInput,
+  toPrimaverseEmail,
+} from "@/utils/validation/LoginValidation";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface Props {
@@ -42,7 +30,7 @@ export default function StepLogin({ email = "", onNext, onBack, onForgot }: Prop
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedEmail = toPrimaverseEmail(mail);
-    if (!PRIMAVERSE_EMAIL_REGEX.test(normalizedEmail)) {
+    if (!isPrimaverseEmail(normalizedEmail)) {
       setError("Only @primaverse.com emails are allowed.");
       return;
     }
@@ -51,8 +39,9 @@ export default function StepLogin({ email = "", onNext, onBack, onForgot }: Prop
     try {
       await authApi.login(normalizedEmail, pw);
       onNext?.();
-    } catch (err: any) {
-      setError(err.message || "Invalid email or password.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Invalid email or password.";
+      setError(message);
       setPw("");
     } finally {
       setLoading(false);
@@ -167,14 +156,7 @@ export default function StepLogin({ email = "", onNext, onBack, onForgot }: Prop
         <span className="auth-social-txt">Collaborating in TeamSync today</span>
       </div>
 
-      <footer className="auth-footer">
-        <span>© 2026 TeamSync Digital Atelier. All rights reserved.</span>
-        <div className="auth-footer-links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Security</a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

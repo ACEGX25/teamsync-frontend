@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import Navbar        from "@/components/dashboard/Navbar";
-import Sidebar       from "@/components/dashboard/Sidebar";
+import Navbar        from "@/shared/Navbar";
+import Sidebar       from "@/shared/Sidebar";
 import QuickActions  from "@/components/dashboard/QuickActions";
 import RecentMessages from "@/components/dashboard/RecentMessages";
 import ActivityFeed  from "@/components/dashboard/ActivityFeed";
@@ -56,7 +56,6 @@ export default function DashboardPage() {
         <Sidebar
           collapsed={collapsed}
           active={active}
-          onToggleCollapse={() => setCollapsed((c) => !c)}
           onNavClick={setActive}
         />
 

@@ -6,14 +6,14 @@ export default function QuickActions() {
       <div className="db-card-title">Quick Actions</div>
 
       <button className="db-qa-btn db-qa-btn--primary">
-        <div className="db-qa-icon" style={{ background: "rgba(109,40,217,0.15)" }}>
+        <div className="db-qa-icon" style={{ background: "var(--color-db-quick-icon-primary-bg)" }}>
           <Video size={17} />
         </div>
         Start a Meeting
       </button>
 
       <button className="db-qa-btn db-qa-btn--secondary">
-        <div className="db-qa-icon" style={{ background: "#ece9f8" }}>
+        <div className="db-qa-icon" style={{ background: "var(--color-db-quick-icon-secondary-bg)" }}>
           <Building2 size={17} />
         </div>
         Create Organization
