@@ -1,4 +1,4 @@
-import { IconVideoCamera, IconBuilding } from "./Icons";
+import { Video, Building2 } from "lucide-react";
 
 export default function QuickActions() {
   return (
@@ -6,18 +6,15 @@ export default function QuickActions() {
       <div className="db-card-title">Quick Actions</div>
 
       <button className="db-qa-btn db-qa-btn--primary">
-        <div
-          className="db-qa-icon"
-          style={{ background: "rgba(109,40,217,0.15)" }}
-        >
-          <IconVideoCamera />
+        <div className="db-qa-icon" style={{ background: "rgba(109,40,217,0.15)" }}>
+          <Video size={17} />
         </div>
         Start a Meeting
       </button>
 
       <button className="db-qa-btn db-qa-btn--secondary">
         <div className="db-qa-icon" style={{ background: "#ece9f8" }}>
-          <IconBuilding />
+          <Building2 size={17} />
         </div>
         Create Organization
       </button>

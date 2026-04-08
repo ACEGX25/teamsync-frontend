@@ -8,6 +8,40 @@ interface ApiResponse<T> {
   data?: T;
 }
 
+export interface AuthUser {
+  userId: number;
+  fullName: string;
+  email: string;
+  isVerified: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface LoginResponseData {
+  user: AuthUser;
+  accessToken: string;
+}
+
+interface MeResponseData {
+  user: AuthUser;
+}
+
+const persistUserSession = (payload?: LoginResponseData) => {
+  if (typeof window === "undefined" || !payload) return;
+  localStorage.setItem("accessToken", payload.accessToken);
+  localStorage.setItem("userName", payload.user.fullName);
+  localStorage.setItem("userEmail", payload.user.email);
+  localStorage.setItem("userDetails", JSON.stringify(payload.user));
+};
+
+const getAuthHeaders = () => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
 export const authApi = {
   // Step 1: Initiate registration (send OTP to email)
   initiateRegister: async (email: string) => {
@@ -17,7 +51,7 @@ export const authApi = {
       body: JSON.stringify({ email }),
       credentials: "include",
     });
-    const data: ApiResponse<any> = await response.json();
+    const data: ApiResponse<unknown> = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Registration failed");
     }
@@ -32,7 +66,7 @@ export const authApi = {
       body: JSON.stringify({ email, otp }),
       credentials: "include",
     });
-    const data: ApiResponse<any> = await response.json();
+    const data: ApiResponse<unknown> = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "OTP verification failed");
     }
@@ -47,7 +81,7 @@ export const authApi = {
       body: JSON.stringify({ email, fullName, password }),
       credentials: "include",
     });
-    const data: ApiResponse<any> = await response.json();
+    const data: ApiResponse<unknown> = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Registration completion failed");
     }
@@ -62,10 +96,33 @@ export const authApi = {
       body: JSON.stringify({ email, password }),
       credentials: "include",
     });
-    const data: ApiResponse<any> = await response.json();
+    const data: ApiResponse<LoginResponseData> = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Login failed");
     }
+    persistUserSession(data.data);
+    return data;
+  },
+
+  // Current logged-in user
+  getMe: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    });
+
+    const data: ApiResponse<MeResponseData> = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch user details");
+    }
+
+    if (typeof window !== "undefined" && data.data?.user) {
+      localStorage.setItem("userName", data.data.user.fullName);
+      localStorage.setItem("userEmail", data.data.user.email);
+      localStorage.setItem("userDetails", JSON.stringify(data.data.user));
+    }
+
     return data;
   },
 
@@ -77,7 +134,7 @@ export const authApi = {
       body: JSON.stringify({ email }),
       credentials: "include",
     });
-    const data: ApiResponse<any> = await response.json();
+    const data: ApiResponse<unknown> = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Failed to send OTP");
     }
@@ -107,7 +164,7 @@ export const authApi = {
       body: JSON.stringify({ resetToken, newPassword }),
       credentials: "include",
     });
-    const data: ApiResponse<any> = await response.json();
+    const data: ApiResponse<unknown> = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Password reset failed");
     }
