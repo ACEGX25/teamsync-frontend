@@ -1,18 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, ArrowRight, Check, Eye, EyeOff, X } from "lucide-react";
 import { authApi } from "@/utils/api";
+
+const PRIMAVERSE_EMAIL_REGEX = /^[a-z]+@primaverse\.com$/;
+
+function sanitizePrimaverseEmailInput(raw: string): string {
+  const lowered = raw.toLowerCase();
+  const [localPart = "", ...rest] = lowered.split("@");
+  const cleanLocalPart = localPart.replace(/[^a-z]/g, "");
+  if (rest.length === 0) return cleanLocalPart;
+  const cleanDomain = rest.join("@").replace(/[^a-z.]/g, "");
+  return `${cleanLocalPart}@${cleanDomain}`;
+}
+
+function toPrimaverseEmail(raw: string): string {
+  const sanitized = sanitizePrimaverseEmailInput(raw);
+  const [localPart = "", domain] = sanitized.split("@");
+  if (!localPart) return "";
+  return `${localPart}@${domain || "primaverse.com"}`;
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface Props {
   email?: string;
   onNext?: () => void;
   onBack?: () => void;
+  onForgot?: () => void;
 }
 
-export default function StepLogin({ email = "", onNext, onBack }: Props) {
-  const [mail, setMail]       = useState(email);
+export default function StepLogin({ email = "", onNext, onBack, onForgot }: Props) {
+  const router = useRouter();
+  const [mail, setMail]       = useState(sanitizePrimaverseEmailInput(email));
   const [pw, setPw]           = useState("");
   const [showPw, setShowPw]   = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,10 +41,15 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedEmail = toPrimaverseEmail(mail);
+    if (!PRIMAVERSE_EMAIL_REGEX.test(normalizedEmail)) {
+      setError("Only @primaverse.com emails are allowed.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
-      await authApi.login(mail, pw);
+      await authApi.login(normalizedEmail, pw);
       onNext?.();
     } catch (err: any) {
       setError(err.message || "Invalid email or password.");
@@ -53,7 +79,7 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
               className={`auth-input${mail ? " has-value" : ""}`}
               placeholder="name@primaverse.com"
               value={mail}
-              onChange={(e) => { setMail(e.target.value); setError(""); }}
+              onChange={(e) => { setMail(sanitizePrimaverseEmailInput(e.target.value)); setError(""); }}
               required
               autoComplete="email"
             />
@@ -63,7 +89,19 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
           <div className="auth-field">
             <div className="auth-field-row">
               <label className="auth-label">Password</label>
-              <button type="button" className="auth-forgot">Forgot Password?</button>
+              <button
+                type="button"
+                className="auth-forgot"
+                onClick={() => {
+                  if (onForgot) {
+                    onForgot();
+                    return;
+                  }
+                  router.push("/auth/forgot-password");
+                }}
+              >
+                Forgot Password?
+              </button>
             </div>
             <div className="auth-pw-wrap">
               <input
@@ -102,7 +140,6 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
               <>Sign In <ArrowRight size={18} aria-hidden="true" /></>
             )}
           </button>
-
           {/* Divider */}
           <div className="auth-divider">
             <div className="auth-divider-line" />
@@ -131,7 +168,7 @@ export default function StepLogin({ email = "", onNext, onBack }: Props) {
       </div>
 
       <footer className="auth-footer">
-        <span>© 2024 TeamSync Digital Atelier. All rights reserved.</span>
+        <span>© 2026 TeamSync Digital Atelier. All rights reserved.</span>
         <div className="auth-footer-links">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>

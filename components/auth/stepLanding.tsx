@@ -4,6 +4,24 @@ import { useState } from "react";
 import { AlertCircle, Aperture } from "lucide-react";
 import { authApi } from "@/utils/api";
 
+const PRIMAVERSE_EMAIL_REGEX = /^[a-z]+@primaverse\.com$/;
+
+function sanitizePrimaverseEmailInput(raw: string): string {
+  const lowered = raw.toLowerCase();
+  const [localPart = "", ...rest] = lowered.split("@");
+  const cleanLocalPart = localPart.replace(/[^a-z]/g, "");
+  if (rest.length === 0) return cleanLocalPart;
+  const cleanDomain = rest.join("@").replace(/[^a-z.]/g, "");
+  return `${cleanLocalPart}@${cleanDomain}`;
+}
+
+function toPrimaverseEmail(raw: string): string {
+  const sanitized = sanitizePrimaverseEmailInput(raw);
+  const [localPart = "", domain] = sanitized.split("@");
+  if (!localPart) return "";
+  return `${localPart}@${domain || "primaverse.com"}`;
+}
+
 type Step = "landing" | "verify" | "secure" | "login";
 
 interface Props {
@@ -17,9 +35,9 @@ export default function StepLanding({ onNext }: Props) {
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail.endsWith("@primaverse.com")) {
-      setError("Only @primaverse.com email addresses are allowed.");
+    const normalizedEmail = toPrimaverseEmail(email.trim());
+    if (!PRIMAVERSE_EMAIL_REGEX.test(normalizedEmail)) {
+      setError("Only @primaverse.com emails are allowed.");
       return;
     }
     setError("");
@@ -52,6 +70,9 @@ export default function StepLanding({ onNext }: Props) {
         {/* Brand */}
         <div className="landing-brand-name">TeamSync</div>
         <div className="landing-tagline">Synchronized Collaboration</div>
+        <div className="landing-subtitle">
+          Seamless communication and real-time collaboration, all in one place.
+        </div>
 
         {/* Form */}
         <form style={{ width: "100%" }} onSubmit={handle}>
@@ -90,8 +111,7 @@ export default function StepLanding({ onNext }: Props) {
             <button
               type="button"
               className="auth-link"
-              onClick={() => onNext(email, "login")}
-              disabled={loading}
+              onClick={() => onNext(toPrimaverseEmail(email), "login")}
             >
               Log in
             </button>

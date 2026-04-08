@@ -21,7 +21,7 @@ export default function Layout({ children, showNav = false }: LayoutProps) {
       )}
       {children}
       <footer className="ts-footer">
-        <span>© 2024 TeamSync Digital Atelier. All rights reserved.</span>
+        <span>© 2026 TeamSync Digital Atelier. All rights reserved.</span>
         <div className="ts-footer-links">
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>
