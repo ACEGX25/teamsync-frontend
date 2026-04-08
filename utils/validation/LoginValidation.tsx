@@ -1,4 +1,5 @@
-export const PRIMAVERSE_EMAIL_REGEX = /^[a-z]+@primaverse\.com$/;
+export const PRIMAVERSE_EMAIL_REGEX =
+	/^[a-z0-9.]+@primaverse\.com$/;
 
 export type PasswordStrength = {
 	label: "" | "WEAK" | "FAIR" | "STRONG" | "OPTIMAL";
@@ -9,7 +10,7 @@ export type PasswordStrength = {
 export function sanitizePrimaverseEmailInput(raw: string): string {
 	const lowered = raw.toLowerCase();
 	const [localPart = "", ...rest] = lowered.split("@");
-	const cleanLocalPart = localPart.replace(/[^a-z]/g, "");
+	const cleanLocalPart = localPart.replace(/[^a-z0-9.]/g, "");
 
 	if (rest.length === 0) return cleanLocalPart;
 
