@@ -1,6 +1,7 @@
 // utils/api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+import Cookies from 'js-cookie'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -28,10 +29,13 @@ interface MeResponseData {
 
 const persistUserSession = (payload?: LoginResponseData) => {
   if (typeof window === "undefined" || !payload) return;
+  // existing localStorage
   localStorage.setItem("accessToken", payload.accessToken);
   localStorage.setItem("userName", payload.user.fullName);
   localStorage.setItem("userEmail", payload.user.email);
   localStorage.setItem("userDetails", JSON.stringify(payload.user));
+  // add cookie so middleware can read it
+  Cookies.set("token", payload.accessToken, { expires: 7 })
 };
 
 const getAuthHeaders = () => {
@@ -43,7 +47,6 @@ const getAuthHeaders = () => {
 };
 
 export const authApi = {
-  // Login
   login: async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
@@ -58,30 +61,7 @@ export const authApi = {
     persistUserSession(data.data);
     return data;
   },
-    logout: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      credentials: "include",
-    });
 
-    // Cleanup local storage regardless of response success
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userName");
-      localStorage.removeItem("userEmail");
-      localStorage.removeItem("userDetails");
-    }
-
-    if (!response.ok) {
-      const data: ApiResponse<unknown> = await response.json();
-      throw new Error(data.message || "Logout failed");
-    }
-    
-    return true;
-  },
-
-  //Logout
   logout: async () => {
     const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: "POST",
@@ -89,23 +69,24 @@ export const authApi = {
       credentials: "include",
     });
 
-    // Cleanup local storage regardless of response success
+    // clear localStorage
     if (typeof window !== "undefined") {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("userName");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("userDetails");
     }
+    // clear cookie so middleware blocks access immediately
+    Cookies.remove("token")
 
     if (!response.ok) {
       const data: ApiResponse<unknown> = await response.json();
       throw new Error(data.message || "Logout failed");
     }
-    
+
     return true;
   },
 
-  // Current logged-in user
   getMe: async () => {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",

@@ -8,6 +8,7 @@ import {
   sanitizePrimaverseEmailInput,
   toPrimaverseEmail,
 } from "@/utils/validation/LoginValidation";
+import Footer from "@/shared/Footer";
 
 type Step = "landing" | "verify" | "secure" | "login";
 
@@ -65,7 +66,7 @@ export default function StepLanding({ onNext }: Props) {
             <input
               type="email"
               className="landing-input-field"
-              placeholder="your email"
+              placeholder="your work email"
               value={email}
               onChange={(e) => { setEmail(sanitizePrimaverseEmailInput(e.target.value)); setError(""); }}
               autoCapitalize="none"
@@ -109,6 +110,7 @@ export default function StepLanding({ onNext }: Props) {
         </div>
 
       </div>
+      <Footer />
     </div>
   );
 }
