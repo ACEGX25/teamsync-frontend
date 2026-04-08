@@ -3,25 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft, ArrowRight, Check, Clock3, Eye, EyeOff, Mail, X } from "lucide-react";
-import { authApi } from "@/utils/api";
-
-const PRIMAVERSE_EMAIL_REGEX = /^[a-z]+@primaverse\.com$/;
-
-function sanitizePrimaverseEmailInput(raw: string): string {
-	const lowered = raw.toLowerCase();
-	const [localPart = "", ...rest] = lowered.split("@");
-	const cleanLocalPart = localPart.replace(/[^a-z]/g, "");
-	if (rest.length === 0) return cleanLocalPart;
-	const cleanDomain = rest.join("@").replace(/[^a-z.]/g, "");
-	return `${cleanLocalPart}@${cleanDomain}`;
-}
-
-function toPrimaverseEmail(raw: string): string {
-	const sanitized = sanitizePrimaverseEmailInput(raw);
-	const [localPart = "", domain] = sanitized.split("@");
-	if (!localPart) return "";
-	return `${localPart}@${domain || "primaverse.com"}`;
-}
+import { forgotPasswordApi } from "@/utils/auth/forgotPasswordApi";
+import Footer from "@/shared/Footer";
+import {
+	getPasswordChecks,
+	isPasswordPolicyValid,
+	isPrimaverseEmail,
+	sanitizePrimaverseEmailInput,
+	toPrimaverseEmail,
+} from "@/utils/validation/LoginValidation";
 
 interface Props {
 	onBack?: () => void;
@@ -41,6 +31,7 @@ export default function ForgotPassword({ onBack }: Props) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const inputs = useRef<(HTMLInputElement | null)[]>([]);
+	const passwordChecks = getPasswordChecks(newPassword);
 
 	useEffect(() => {
 		if (step !== "otp" || timer <= 0) return;
@@ -56,14 +47,14 @@ export default function ForgotPassword({ onBack }: Props) {
 	const handleSendOtp = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const normalizedEmail = toPrimaverseEmail(email.trim());
-		if (!PRIMAVERSE_EMAIL_REGEX.test(normalizedEmail)) {
+		if (!isPrimaverseEmail(normalizedEmail)) {
 			setError("Only @primaverse.com emails are allowed.");
 			return;
 		}
 		setError("");
 		setLoading(true);
 		try {
-			await authApi.forgotPassword(normalizedEmail);
+			await forgotPasswordApi.forgotPassword(normalizedEmail);
 			setEmail(normalizedEmail);
 			setOtp(Array(6).fill(""));
 			setTimer(114);
@@ -120,7 +111,7 @@ export default function ForgotPassword({ onBack }: Props) {
 		setError("");
 		setLoading(true);
 		try {
-			const response = await authApi.verifyForgotOtp(email, code);
+			const response = await forgotPasswordApi.verifyForgotOtp(email, code);
 			const token = response.data?.resetToken;
 			if (!token) {
 				setError("Could not verify OTP. Please try again.");
@@ -145,7 +136,7 @@ export default function ForgotPassword({ onBack }: Props) {
 		setError("");
 		setLoading(true);
 		try {
-			await authApi.forgotPassword(email);
+			await forgotPasswordApi.forgotPassword(email);
 			setOtp(Array(6).fill(""));
 			setTimer(114);
 			inputs.current[0]?.focus();
@@ -162,11 +153,8 @@ export default function ForgotPassword({ onBack }: Props) {
 
 	const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		const hasMinLength = newPassword.length >= 8;
-		const hasUppercase = /[A-Z]/.test(newPassword);
-		const hasSpecial = /[^a-zA-Z0-9]/.test(newPassword);
 
-		if (!hasMinLength || !hasUppercase || !hasSpecial) {
+		if (!isPasswordPolicyValid(newPassword)) {
 			setError("Password must be at least 8 characters and include 1 uppercase and 1 special character.");
 			return;
 		}
@@ -179,7 +167,7 @@ export default function ForgotPassword({ onBack }: Props) {
 		setError("");
 		setLoading(true);
 		try {
-			await authApi.resetPassword(resetToken, newPassword);
+			await forgotPasswordApi.resetPassword(resetToken, newPassword);
 			setStep("done");
 		} catch (err: unknown) {
 			if (err instanceof Error) {
@@ -301,14 +289,14 @@ export default function ForgotPassword({ onBack }: Props) {
 					<form className="auth-form" onSubmit={handleResetPassword}>
 						{newPassword && (
 							<div className="auth-pw-hints" style={{ marginBottom: 12 }}>
-								<span className={newPassword.length >= 8 ? "auth-hint-met" : "auth-hint-unmet"}>
-									{newPassword.length >= 8 ? <Check size={12} /> : <X size={12} />} Min 8 characters
+								<span className={passwordChecks.hasMinLength ? "auth-hint-met" : "auth-hint-unmet"}>
+									{passwordChecks.hasMinLength ? <Check size={12} /> : <X size={12} />} Min 8 characters
 								</span>
-								<span className={/[A-Z]/.test(newPassword) ? "auth-hint-met" : "auth-hint-unmet"}>
-									{/[A-Z]/.test(newPassword) ? <Check size={12} /> : <X size={12} />} One uppercase letter
+								<span className={passwordChecks.hasUppercase ? "auth-hint-met" : "auth-hint-unmet"}>
+									{passwordChecks.hasUppercase ? <Check size={12} /> : <X size={12} />} One uppercase letter
 								</span>
-								<span className={/[^a-zA-Z0-9]/.test(newPassword) ? "auth-hint-met" : "auth-hint-unmet"}>
-									{/[^a-zA-Z0-9]/.test(newPassword) ? <Check size={12} /> : <X size={12} />} One special character
+								<span className={passwordChecks.hasSpecial ? "auth-hint-met" : "auth-hint-unmet"}>
+									{passwordChecks.hasSpecial ? <Check size={12} /> : <X size={12} />} One special character
 								</span>
 							</div>
 						)}
@@ -431,14 +419,7 @@ export default function ForgotPassword({ onBack }: Props) {
 				<span className="auth-social-txt">Collaborating in TeamSync today</span>
 			</div>
 
-			<footer className="auth-footer">
-				<span>© 2026 TeamSync Digital Atelier. All rights reserved.</span>
-				<div className="auth-footer-links">
-					<a href="#">Privacy Policy</a>
-					<a href="#">Terms of Service</a>
-					<a href="#">Security</a>
-				</div>
-			</footer>
+			<Footer />
 		</div>
 	);
 }

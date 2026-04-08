@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { AlertCircle, ArrowRight, Clock3, LockKeyhole, ShieldCheck } from "lucide-react";
-import { authApi } from "@/utils/api";
+import { registrationApi } from "@/utils/auth/registrationApi";
+import Footer from "@/shared/Footer";
 
 interface Props {
   email: string;
@@ -52,11 +53,12 @@ export default function StepVerify({ email, onNext }: Props) {
   const handleResend = async () => {
     setError("");
     try {
-      await authApi.initiateRegister(email);
+      await registrationApi.initiateRegister(email);
       setTimer(114);
       setOtp(Array(6).fill(""));
-    } catch (err: any) {
-      setError(err.message || "Failed to resend OTP.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to resend OTP.";
+      setError(message);
     }
   };
 
@@ -65,10 +67,11 @@ export default function StepVerify({ email, onNext }: Props) {
     setError("");
     setLoading(true);
     try {
-      await authApi.verifyRegisterOtp(email, otp.join(""));
+      await registrationApi.verifyRegisterOtp(email, otp.join(""));
       onNext?.();
-    } catch (err: any) {
-      setError(err.message || "Invalid OTP. Please try again.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Invalid OTP. Please try again.";
+      setError(message);
       setOtp(Array(6).fill(""));
       inputs.current[0]?.focus();
     } finally {
@@ -153,14 +156,7 @@ export default function StepVerify({ email, onNext }: Props) {
         </p>
       </div>
 
-      <footer className="auth-footer">
-        <span>© 2026 TeamSync Digital Atelier. All rights reserved.</span>
-        <div className="auth-footer-links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Security</a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

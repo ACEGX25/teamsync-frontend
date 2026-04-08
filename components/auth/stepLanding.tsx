@@ -2,25 +2,12 @@
 
 import { useState } from "react";
 import { AlertCircle, Aperture } from "lucide-react";
-import { authApi } from "@/utils/api";
-
-const PRIMAVERSE_EMAIL_REGEX = /^[a-z]+@primaverse\.com$/;
-
-function sanitizePrimaverseEmailInput(raw: string): string {
-  const lowered = raw.toLowerCase();
-  const [localPart = "", ...rest] = lowered.split("@");
-  const cleanLocalPart = localPart.replace(/[^a-z]/g, "");
-  if (rest.length === 0) return cleanLocalPart;
-  const cleanDomain = rest.join("@").replace(/[^a-z.]/g, "");
-  return `${cleanLocalPart}@${cleanDomain}`;
-}
-
-function toPrimaverseEmail(raw: string): string {
-  const sanitized = sanitizePrimaverseEmailInput(raw);
-  const [localPart = "", domain] = sanitized.split("@");
-  if (!localPart) return "";
-  return `${localPart}@${domain || "primaverse.com"}`;
-}
+import { registrationApi } from "@/utils/auth/registrationApi";
+import {
+  isPrimaverseEmail,
+  sanitizePrimaverseEmailInput,
+  toPrimaverseEmail,
+} from "@/utils/validation/LoginValidation";
 
 type Step = "landing" | "verify" | "secure" | "login";
 
@@ -36,7 +23,7 @@ export default function StepLanding({ onNext }: Props) {
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedEmail = toPrimaverseEmail(email.trim());
-    if (!PRIMAVERSE_EMAIL_REGEX.test(normalizedEmail)) {
+    if (!isPrimaverseEmail(normalizedEmail)) {
       setError("Only @primaverse.com emails are allowed.");
       return;
     }
@@ -44,7 +31,7 @@ export default function StepLanding({ onNext }: Props) {
     setLoading(true);
 
     try {
-      await authApi.initiateRegister(normalizedEmail);
+      await registrationApi.initiateRegister(normalizedEmail);
       onNext(normalizedEmail);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
@@ -83,7 +70,7 @@ export default function StepLanding({ onNext }: Props) {
               className="landing-input-field"
               placeholder="your email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value.toLowerCase().replace(/\d/g, "")); setError(""); }}
+              onChange={(e) => { setEmail(sanitizePrimaverseEmailInput(e.target.value)); setError(""); }}
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
