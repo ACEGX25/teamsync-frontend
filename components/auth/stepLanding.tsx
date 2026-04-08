@@ -42,11 +42,12 @@ export default function StepLanding({ onNext }: Props) {
     }
     setError("");
     setLoading(true);
+
     try {
       await authApi.initiateRegister(normalizedEmail);
       onNext(normalizedEmail);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ export default function StepLanding({ onNext }: Props) {
     <div className="auth-page auth-page--landing">
       <div className="auth-card auth-card--landing">
 
-        {/* Floating orb */}
+        {/* Floating orb with concentric rings */}
         <div className="landing-orb-wrap">
           <div className="landing-orb-ring landing-ring-3" />
           <div className="landing-orb-ring landing-ring-2" />
@@ -82,13 +83,18 @@ export default function StepLanding({ onNext }: Props) {
               className="landing-input-field"
               placeholder="your email"
               value={email}
-              onChange={(e) => { setEmail(sanitizePrimaverseEmailInput(e.target.value)); setError(""); }}
+              onChange={(e) => { setEmail(e.target.value.toLowerCase().replace(/\d/g, "")); setError(""); }}
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
               required
+              disabled={loading}
             />
-            <button type="submit" className="landing-btn-verify" disabled={loading}>
+            <button 
+              type="submit" 
+              className="landing-btn-verify"
+              disabled={loading}
+            >
               {loading ? "Sending..." : "Verify"}
             </button>
           </div>
@@ -112,7 +118,7 @@ export default function StepLanding({ onNext }: Props) {
           </p>
         </form>
 
-        {/* Status badge */}
+        {/* Live status badge */}
         <div className="landing-badge">
           <span className="landing-dot landing-dot--on" />
           <span className="landing-badge-text">Live &amp; Secure</span>
