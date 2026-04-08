@@ -103,6 +103,28 @@ export const authApi = {
     persistUserSession(data.data);
     return data;
   },
+    logout: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    });
+
+    // Cleanup local storage regardless of response success
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userDetails");
+    }
+
+    if (!response.ok) {
+      const data: ApiResponse<unknown> = await response.json();
+      throw new Error(data.message || "Logout failed");
+    }
+    
+    return true;
+  },
 
   // Current logged-in user
   getMe: async () => {

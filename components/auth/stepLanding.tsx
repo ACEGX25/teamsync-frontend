@@ -70,9 +70,6 @@ export default function StepLanding({ onNext }: Props) {
         {/* Brand */}
         <div className="landing-brand-name">TeamSync</div>
         <div className="landing-tagline">Synchronized Collaboration</div>
-        <div className="landing-subtitle">
-          Seamless communication and real-time collaboration, all in one place.
-        </div>
 
         {/* Form */}
         <form style={{ width: "100%" }} onSubmit={handle}>
