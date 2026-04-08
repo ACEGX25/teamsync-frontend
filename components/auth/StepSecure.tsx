@@ -1,22 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, ArrowRight, Eye, EyeOff, Info, ShieldCheck ,Check ,X } from "lucide-react";
-import { authApi } from "@/utils/api";
-
-// ─── Strength helper ──────────────────────────────────────────────────────────
-function getStrength(pw: string): { label: string; level: number; color: string } {
-  if (!pw) return { label: "", level: 0, color: "" };
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[^a-zA-Z0-9]/.test(pw)) score++;
-  if (pw.length >= 12) score++;
-  if (score <= 1) return { label: "WEAK", level: 1, color: "#ef4444" };
-  if (score === 2) return { label: "FAIR", level: 2, color: "#f59e0b" };
-  if (score === 3) return { label: "STRONG", level: 3, color: "#8b5cf6" };
-  return { label: "OPTIMAL", level: 4, color: "#6d28d9" };
-}
+import { AlertCircle, ArrowRight, Eye, EyeOff, ShieldCheck, Check, X } from "lucide-react";
+import { registrationApi } from "@/utils/auth/registrationApi";
+import Footer from "@/shared/Footer";
+import {
+  getPasswordChecks,
+  getPasswordStrength,
+  sanitizeNameInput,
+} from "@/utils/validation/LoginValidation";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface Props {
@@ -33,7 +25,8 @@ export default function StepSecure({ email, onNext }: Props) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const strength = getStrength(pw);
+  const strength = getPasswordStrength(pw);
+  const passwordChecks = getPasswordChecks(pw);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +35,11 @@ export default function StepSecure({ email, onNext }: Props) {
     setError("");
     setLoading(true);
     try {
-      await authApi.completeRegister(email, fullName, pw);
+      await registrationApi.completeRegister(email, fullName, pw);
       onNext?.();
-    } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -75,7 +69,7 @@ export default function StepSecure({ email, onNext }: Props) {
               className={`auth-input${fullName ? " has-value" : ""}`}
               placeholder="Jane Doe"
               value={fullName}
-              onChange={(e) => { setFullName(e.target.value.replace(/[^A-Za-z\s]/g, "")); setError(""); }}
+              onChange={(e) => { setFullName(sanitizeNameInput(e.target.value)); setError(""); }}
               required
               autoComplete="name"
             />
@@ -168,14 +162,14 @@ export default function StepSecure({ email, onNext }: Props) {
 
           {pw && (
             <div className="auth-pw-hints">
-              <span className={pw.length >= 8 ? "auth-hint-met" : "auth-hint-unmet"}>
-                {pw.length >= 8 ? <Check size={12} /> : <X size={12} />} Min 8 characters
+              <span className={passwordChecks.hasMinLength ? "auth-hint-met" : "auth-hint-unmet"}>
+                {passwordChecks.hasMinLength ? <Check size={12} /> : <X size={12} />} Min 8 characters
               </span>
-              <span className={/[A-Z]/.test(pw) ? "auth-hint-met" : "auth-hint-unmet"}>
-                {/[A-Z]/.test(pw) ? <Check size={12} /> : <X size={12} />} One uppercase letter
+              <span className={passwordChecks.hasUppercase ? "auth-hint-met" : "auth-hint-unmet"}>
+                {passwordChecks.hasUppercase ? <Check size={12} /> : <X size={12} />} One uppercase letter
               </span>
-              <span className={/[^a-zA-Z0-9]/.test(pw) ? "auth-hint-met" : "auth-hint-unmet"}>
-                {/[^a-zA-Z0-9]/.test(pw) ? <Check size={12} /> : <X size={12} />} One special character
+              <span className={passwordChecks.hasSpecial ? "auth-hint-met" : "auth-hint-unmet"}>
+                {passwordChecks.hasSpecial ? <Check size={12} /> : <X size={12} />} One special character
               </span>
             </div>
           )}
@@ -184,14 +178,7 @@ export default function StepSecure({ email, onNext }: Props) {
         </form>
       </div>
 
-      <footer className="auth-footer">
-        <span>© 2026 TeamSync Digital Atelier. All rights reserved.</span>
-        <div className="auth-footer-links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Security</a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
