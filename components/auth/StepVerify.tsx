@@ -18,6 +18,10 @@ export default function StepVerify({ email, onNext }: Props) {
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
+    inputs.current[0]?.focus();
+  }, []);
+
+  useEffect(() => {
     if (timer <= 0) return;
     const id = setInterval(() => setTimer((t) => t - 1), 1000);
     return () => clearInterval(id);
@@ -56,6 +60,7 @@ export default function StepVerify({ email, onNext }: Props) {
       await registrationApi.initiateRegister(email);
       setTimer(114);
       setOtp(Array(6).fill(""));
+      inputs.current[0]?.focus();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to resend OTP.";
       setError(message);

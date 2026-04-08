@@ -67,7 +67,7 @@ export default function StepSecure({ email, onNext }: Props) {
             <input
               type="text"
               className={`auth-input${fullName ? " has-value" : ""}`}
-              placeholder="Jane Doe"
+              placeholder="Your Name"
               value={fullName}
               onChange={(e) => { setFullName(sanitizeNameInput(e.target.value)); setError(""); }}
               required

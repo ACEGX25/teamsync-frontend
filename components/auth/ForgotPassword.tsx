@@ -39,6 +39,12 @@ export default function ForgotPassword({ onBack }: Props) {
 		return () => clearInterval(id);
 	}, [step, timer]);
 
+	useEffect(() => {
+		if (step === "otp") {
+			inputs.current[0]?.focus();
+		}
+	}, [step]);
+
 	const formatTime = (seconds: number) =>
 		`${Math.floor(seconds / 60).toString().padStart(2, "0")}:${(seconds % 60)
 			.toString()
@@ -287,20 +293,6 @@ export default function ForgotPassword({ onBack }: Props) {
 
 				{step === "password" && (
 					<form className="auth-form" onSubmit={handleResetPassword}>
-						{newPassword && (
-							<div className="auth-pw-hints" style={{ marginBottom: 12 }}>
-								<span className={passwordChecks.hasMinLength ? "auth-hint-met" : "auth-hint-unmet"}>
-									{passwordChecks.hasMinLength ? <Check size={12} /> : <X size={12} />} Min 8 characters
-								</span>
-								<span className={passwordChecks.hasUppercase ? "auth-hint-met" : "auth-hint-unmet"}>
-									{passwordChecks.hasUppercase ? <Check size={12} /> : <X size={12} />} One uppercase letter
-								</span>
-								<span className={passwordChecks.hasSpecial ? "auth-hint-met" : "auth-hint-unmet"}>
-									{passwordChecks.hasSpecial ? <Check size={12} /> : <X size={12} />} One special character
-								</span>
-							</div>
-						)}
-
 						<div className="auth-field">
 							<label className="auth-label" htmlFor="newPassword">New Password</label>
 							<div className="auth-pw-wrap">
@@ -344,6 +336,20 @@ export default function ForgotPassword({ onBack }: Props) {
 								</button>
 							</div>
 						</div>
+
+						{newPassword && (
+							<div className="auth-pw-hints" style={{ marginBottom: 12 }}>
+								<span className={passwordChecks.hasMinLength ? "auth-hint-met" : "auth-hint-unmet"}>
+									{passwordChecks.hasMinLength ? <Check size={12} /> : <X size={12} />} Min 8 characters
+								</span>
+								<span className={passwordChecks.hasUppercase ? "auth-hint-met" : "auth-hint-unmet"}>
+									{passwordChecks.hasUppercase ? <Check size={12} /> : <X size={12} />} One uppercase letter
+								</span>
+								<span className={passwordChecks.hasSpecial ? "auth-hint-met" : "auth-hint-unmet"}>
+									{passwordChecks.hasSpecial ? <Check size={12} /> : <X size={12} />} One special character
+								</span>
+							</div>
+						)}
 
 						{error && (
 							<p className="auth-error">
