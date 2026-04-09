@@ -5,11 +5,12 @@ import { authApi } from "@/utils/api";
 interface NavbarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
+  onNewMeeting: () => void;
   userName: string;
   userEmail: string;
 }
 
-export default function Navbar({ collapsed, onToggleCollapse, userName, userEmail }: NavbarProps) {
+export default function Navbar({ collapsed, onToggleCollapse, onNewMeeting, userName, userEmail }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
  const handleLogout = async () => {
@@ -46,7 +47,7 @@ export default function Navbar({ collapsed, onToggleCollapse, userName, userEmai
       </div>
 
       <div className="db-navbar-right">
-        <button className="db-new-meeting-btn">
+        <button className="db-new-meeting-btn" onClick={onNewMeeting}>
           <Plus size={15} /> New Meeting
         </button>
         <div className="db-icon-btn">
