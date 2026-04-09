@@ -4,6 +4,7 @@ interface ActivityItemProps {
   highlight: string;
   time: string;
   color: string;
+  isLast?: boolean;
 }
 
 export default function ActivityItem({
@@ -12,17 +13,46 @@ export default function ActivityItem({
   highlight,
   time,
   color,
+  isLast,
 }: ActivityItemProps) {
   return (
-    <div className="db-act-item">
-      <div className="db-act-icon" style={{ background: color }}>
+    <div style={{
+      display: "flex",
+      alignItems: "flex-start",
+      gap: 10,
+      padding: "10px 0",
+      borderBottom: isLast ? "none" : "1px solid var(--color-db-msg-divider)",
+    }}>
+      <div style={{
+        width: 28,
+        height: 28,
+        borderRadius: 8,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        background: color,
+      }}>
         {icon}
       </div>
-      <div className="db-act-body">
-        <p className="db-act-text">
-          {text} <span className="db-act-highlight">{highlight}</span>
+
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: 12.5, color: "var(--color-db-act-text)", lineHeight: 1.4, margin: 0 }}>
+          {text}{" "}
+          <span style={{ fontWeight: 600, color: "var(--color-brand-deep)" }}>
+            {highlight}
+          </span>
         </p>
-        <p className="db-act-time">{time}</p>
+        <p style={{
+          fontSize: 11,
+          color: "var(--color-db-msg-time)",
+          marginTop: 2,
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          margin: "2px 0 0",
+        }}>
+          {time}
+        </p>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import {
   sanitizePrimaverseEmailInput,
   toPrimaverseEmail,
 } from "@/utils/validation/LoginValidation";
+import Footer from "@/shared/Footer";
 
 type Step = "landing" | "verify" | "secure" | "login";
 
@@ -16,9 +17,9 @@ interface Props {
 }
 
 export default function StepLanding({ onNext }: Props) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]     = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +30,6 @@ export default function StepLanding({ onNext }: Props) {
     }
     setError("");
     setLoading(true);
-
     try {
       await registrationApi.initiateRegister(normalizedEmail);
       onNext(normalizedEmail);
@@ -41,34 +41,115 @@ export default function StepLanding({ onNext }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-landing-bg)] font-[var(--font-base)]">
-      <div className="w-full max-w-[460px] rounded-[28px] bg-[var(--color-surface)] border border-[var(--color-landing-card-border)] px-10 pt-11 pb-9 shadow-[var(--shadow-landing-card)] flex flex-col items-center">
+    <div style={{
+      minHeight: "100vh",
+      background: "var(--color-landing-bg)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "var(--font-base)",
+      padding: 24,
+    }}>
+      <div style={{
+        background: "var(--color-surface)",
+        borderRadius: "var(--radius-page)",
+        padding: "40px 32px 32px",
+        width: "100%",
+        maxWidth: 420,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        border: "1px solid var(--color-landing-card-border)",
+        boxShadow: "var(--shadow-landing-card)",
+      }}>
 
-        {/* Floating orb with concentric rings */}
-        <div className="relative h-[120px] w-[120px] mb-6 flex items-center justify-center">
-          <div className="absolute h-[120px] w-[120px] rounded-full border border-[color:var(--color-brand-light)]/20" />
-          <div className="absolute h-[92px] w-[92px] rounded-full border border-[color:var(--color-brand-light)]/30" />
-          <div className="absolute h-[70px] w-[70px] rounded-full border border-[color:var(--color-brand)]/35" />
-          <div className="h-[56px] w-[56px] rounded-2xl bg-[linear-gradient(145deg,var(--color-orb-start),var(--color-orb-end))] flex items-center justify-center shadow-[var(--shadow-orb)]">
-            <Aperture size={28} color="var(--color-surface)" aria-hidden="true" />
+        {/* Orb */}
+        <div style={{ position: "relative", width: 120, height: 120, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+          {/* Rings */}
+          {[
+            { size: 138, color: "var(--color-orb-ring-3)" },
+            { size: 114, color: "var(--color-orb-ring-2)" },
+            { size: 90,  color: "var(--color-orb-ring-1)" },
+          ].map(({ size, color }) => (
+            <div key={size} style={{
+              position: "absolute",
+              width: size,
+              height: size,
+              borderRadius: "50%",
+              border: `1.5px solid ${color}`,
+            }} />
+          ))}
+          {/* Orb */}
+          <div style={{
+            width: 64,
+            height: 64,
+            borderRadius: "50%",
+            background: "linear-gradient(145deg, var(--color-orb-start), var(--color-orb-end))",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            zIndex: 2,
+            boxShadow: "var(--shadow-orb)",
+            animation: "landing-float 3s ease-in-out infinite",
+          }}>
+            <Aperture size={28} color="white" aria-hidden="true" />
           </div>
         </div>
 
         {/* Brand */}
-        <div className="text-[34px] font-black tracking-[-0.9px] text-[var(--color-text-primary)]">TeamSync</div>
-        <div className="mt-1 text-[11px] font-bold uppercase tracking-[1.9px] text-[var(--color-text-muted)]">Synchronized Collaboration</div>
-        <div className="mt-3 text-[14px] leading-[1.55] text-[var(--color-text-secondary)] text-center max-w-[340px]">
-          Seamless communication and real-time collaboration, all in one place.
+        <div style={{
+          fontFamily: "var(--font-display)",
+          fontSize: 28,
+          fontWeight: 700,
+          color: "var(--color-landing-brand)",
+          letterSpacing: "-0.5px",
+          marginBottom: 4,
+          textAlign: "center",
+        }}>
+          TeamSync
+        </div>
+        <div style={{
+          fontSize: 13.5,
+          color: "var(--color-text-muted)",
+          fontWeight: 400,
+          textAlign: "center",
+          marginBottom: 16,
+          letterSpacing: 0.2,
+        }}>
+          Synchronized Collaboration
         </div>
 
         {/* Form */}
-        <form className="w-full mt-7" onSubmit={handle}>
-          <div className="h-[54px] w-full rounded-[15px] border border-[var(--color-landing-input-border)] bg-[var(--color-landing-input-bg)] flex items-center gap-2 px-3">
-            <span className="text-[var(--color-text-muted)] font-bold">@</span>
+        <form style={{ width: "100%" }} onSubmit={handle}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            background: "var(--color-landing-input-bg)",
+            border: "1.5px solid var(--color-landing-input-border)",
+            borderRadius: 999,
+            padding: "5px 5px 5px 18px",
+            marginBottom: 10,
+            transition: "border-color 0.2s",
+          }}>
+            <span style={{ fontSize: 15, color: "var(--color-text-placeholder)", marginRight: 8, flexShrink: 0 }}>
+              @
+            </span>
             <input
               type="email"
-              className="flex-1 bg-transparent outline-none text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)]"
-              placeholder="your email"
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                fontSize: 14,
+                color: "var(--color-text-primary)",
+                fontFamily: "var(--font-base)",
+                padding: "6px 0",
+              }}
+              placeholder="your work email"
               value={email}
               onChange={(e) => { setEmail(sanitizePrimaverseEmailInput(e.target.value)); setError(""); }}
               autoCapitalize="none"
@@ -77,41 +158,96 @@ export default function StepLanding({ onNext }: Props) {
               required
               disabled={loading}
             />
-            <button 
-              type="submit" 
-              className="h-10 px-4 rounded-[11px] bg-[linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))] text-[var(--color-surface)] text-[13px] font-bold hover:opacity-95 transition disabled:opacity-60"
+            <button
+              type="submit"
               disabled={loading}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--color-brand-deep)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "var(--color-orb-end)")}
+              style={{
+                height: 40,
+                padding: "0 22px",
+                background: "var(--color-orb-end)",
+                border: "none",
+                borderRadius: 999,
+                color: "var(--color-surface)",
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: "var(--font-base)",
+                cursor: loading ? "not-allowed" : "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                transition: "background 0.2s, transform 0.15s",
+              }}
             >
               {loading ? "Sending..." : "Verify"}
             </button>
           </div>
 
           {error && (
-            <p className="mt-3 mb-2 rounded-full border border-[var(--color-error-border)] bg-[var(--color-error-bg)] px-3 py-2 text-[12px] text-[var(--color-error)] flex items-center gap-1.5">
+            <p style={{
+              fontSize: 13,
+              color: "var(--color-error)",
+              background: "var(--color-error-bg)",
+              border: "1px solid var(--color-error-border)",
+              borderRadius: 999,
+              padding: "8px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              marginBottom: 10,
+              margin: "0 0 10px",
+            }}>
               <AlertCircle size={14} color="var(--color-error)" aria-hidden="true" />
               {error}
             </p>
           )}
 
-          <p className="mt-1 text-center text-[13px] text-[var(--color-text-secondary)]">
+          <p style={{ fontSize: 13, color: "var(--color-text-faint)", marginBottom: 24, textAlign: "center", margin: "0 0 24px" }}>
             Already have an account?{" "}
             <button
               type="button"
-              className="font-semibold text-[var(--color-brand-deep)] underline underline-offset-2 hover:opacity-80"
               onClick={() => onNext(toPrimaverseEmail(email), "login")}
+              style={{
+                color: "var(--color-brand)",
+                fontWeight: 600,
+                textDecoration: "underline",
+                textUnderlineOffset: 2,
+                cursor: "pointer",
+                background: "none",
+                border: "none",
+                fontFamily: "var(--font-base)",
+                fontSize: "inherit",
+                padding: 0,
+              }}
             >
               Log in
             </button>
           </p>
         </form>
 
-        {/* Live status badge */}
-        <div className="mt-7 rounded-full border border-[var(--color-input-border)] bg-[var(--color-input-bg)] px-4 py-1.5 flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--color-success)] animate-pulse" />
-          <span className="text-[12px] font-semibold text-[var(--color-text-secondary)]">Live &amp; Secure</span>
+        {/* Status badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "5px 14px" }}>
+          <span style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            flexShrink: 0,
+            background: "var(--color-orb-end)",
+            animation: "landing-blink 1.8s ease-in-out infinite",
+          }} />
+          <span style={{
+            fontSize: 11.5,
+            fontWeight: 500,
+            color: "var(--color-text-faint)",
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}>
+            Live &amp; Secure
+          </span>
         </div>
 
       </div>
+      <Footer />
     </div>
   );
 }
