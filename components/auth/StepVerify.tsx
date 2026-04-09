@@ -111,7 +111,6 @@ export default function StepVerify({ email, onNext }: Props) {
     width: 18,
     height: 18,
     border: "2.5px solid rgba(255,255,255,0.3)",
-    borderTopColor: "#fff",
     borderRadius: "50%",
     animation: "auth-spin 0.7s linear infinite",
     display: "inline-block",

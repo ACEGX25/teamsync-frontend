@@ -350,6 +350,13 @@
   margin-bottom: 4px;
 }
 
+.spinner-white-top {
+  border-top-color: #fff !important;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
 /* ─────────────────────────────────────────────
    PASSWORD HINTS
 ───────────────────────────────────────────── */

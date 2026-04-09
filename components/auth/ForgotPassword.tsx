@@ -299,7 +299,7 @@ export default function ForgotPassword({ onBack }: Props) {
             {error && <p style={errorStyle}><AlertCircle size={15} color="var(--color-error)" aria-hidden="true" />{error}</p>}
 
             <button type="submit" style={loading || !email.trim() ? btnDisabledStyle : btnStyle} disabled={loading || !email.trim()}>
-              {loading ? <><span style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "auth-spin 0.7s linear infinite", display: "inline-block" }} /> Sending...</> : <>Send OTP <ArrowRight size={18} aria-hidden="true" /></>}
+              {loading ? <><span style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderRadius: "50%", animation: "auth-spin 0.7s linear infinite", display: "inline-block" }} /> Sending...</> : <>Send OTP <ArrowRight size={18} aria-hidden="true" /></>}
             </button>
           </form>
         )}
@@ -351,7 +351,7 @@ export default function ForgotPassword({ onBack }: Props) {
             {error && <p style={errorStyle}><AlertCircle size={15} color="var(--color-error)" aria-hidden="true" />{error}</p>}
 
             <button type="submit" style={loading || otp.join("").length !== 6 ? btnDisabledStyle : btnStyle} disabled={loading || otp.join("").length !== 6}>
-              {loading ? <><span style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "auth-spin 0.7s linear infinite", display: "inline-block" }} /> Verifying...</> : <>Verify OTP <ArrowRight size={18} aria-hidden="true" /></>}
+              {loading ? <><span style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderRadius: "50%", animation: "auth-spin 0.7s linear infinite", display: "inline-block" }} /> Verifying...</> : <>Verify OTP <ArrowRight size={18} aria-hidden="true" /></>}
             </button>
           </form>
         )}
@@ -400,7 +400,7 @@ export default function ForgotPassword({ onBack }: Props) {
             {error && <p style={errorStyle}><AlertCircle size={15} color="var(--color-error)" aria-hidden="true" />{error}</p>}
 
             <button type="submit" style={loading || !newPassword || !confirmPassword ? btnDisabledStyle : btnStyle} disabled={loading || !newPassword || !confirmPassword}>
-              {loading ? <><span style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "auth-spin 0.7s linear infinite", display: "inline-block" }} /> Updating...</> : <>Reset Password <ArrowRight size={18} aria-hidden="true" /></>}
+              {loading ? <><span style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderRadius: "50%", animation: "auth-spin 0.7s linear infinite", display: "inline-block" }} /> Updating...</> : <>Reset Password <ArrowRight size={18} aria-hidden="true" /></>}
             </button>
           </form>
         )}
