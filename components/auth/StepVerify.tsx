@@ -81,106 +81,28 @@ export default function StepVerify({ email, onNext }: Props) {
 
   const isComplete = otp.join("").length === 6;
 
-  // ── Shared styles ─────────────────────────────────────────────
-  const btnStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "17px 24px",
-    background: "linear-gradient(135deg, var(--color-brand), var(--color-brand-deep))",
-    color: "var(--color-surface)",
-    border: "none",
-    borderRadius: "var(--radius-btn)",
-    fontSize: 15.5,
-    fontWeight: 700,
-    fontFamily: "var(--font-base)",
-    cursor: "pointer",
-    boxShadow: "var(--shadow-btn)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  };
-
-  const btnDisabledStyle: React.CSSProperties = {
-    ...btnStyle,
-    background: "linear-gradient(135deg, var(--color-btn-disabled-start), var(--color-btn-disabled-end))",
-    boxShadow: "none",
-    cursor: "not-allowed",
-  };
-
-  const spinnerStyle: React.CSSProperties = {
-    width: 18,
-    height: 18,
-    border: "2.5px solid rgba(255,255,255,0.3)",
-    borderRadius: "50%",
-    animation: "auth-spin 0.7s linear infinite",
-    display: "inline-block",
-  };
-
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: `radial-gradient(ellipse at 60% 10%, var(--color-bg-page-start) 0%, var(--color-bg-page-mid) 30%, #eef0f8 60%, var(--color-bg-page-end) 100%)`,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "var(--font-base)",
-      padding: 24,
-    }}>
-      <div style={{
-        background: "var(--color-surface)",
-        borderRadius: "var(--radius-page)",
-        padding: "48px 44px 40px",
-        width: "100%",
-        maxWidth: 420,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        boxShadow: "var(--shadow-card)",
-      }}>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(ellipse_at_60%_10%,var(--color-bg-page-start)_0%,var(--color-bg-page-mid)_30%,var(--color-auth-page-mid)_60%,var(--color-bg-page-end)_100%)] px-6 py-6 font-[var(--font-base)]">
+      <div className="flex w-full max-w-[420px] flex-col items-center rounded-[var(--radius-page)] bg-[var(--color-surface)] px-11 pb-10 pt-12 shadow-[var(--shadow-card)]">
 
         {/* Shield */}
-        <div style={{
-          width: 52,
-          height: 52,
-          background: "linear-gradient(145deg, var(--color-brand-xsubtle), var(--color-brand-subtle))",
-          borderRadius: "var(--radius-shield)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 24,
-          boxShadow: "var(--shadow-shield)",
-          flexShrink: 0,
-        }}>
-          <ShieldCheck size={24} fill="var(--color-brand)" color="white" aria-hidden="true" />
+        <div className="mb-6 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[var(--radius-shield)] bg-[linear-gradient(145deg,var(--color-brand-xsubtle),var(--color-brand-subtle))] shadow-[var(--shadow-shield)]">
+          <ShieldCheck size={24} fill="var(--color-brand)" color="var(--color-surface)" aria-hidden="true" />
         </div>
 
         {/* Heading */}
-        <h1 style={{
-          fontSize: 26,
-          fontWeight: 700,
-          color: "var(--color-text-primary)",
-          letterSpacing: "-0.5px",
-          marginBottom: 10,
-          textAlign: "center",
-        }}>
+        <h1 className="mb-2.5 text-center text-[26px] font-bold tracking-[-0.5px] text-[var(--color-text-primary)]">
           Verify Identity
         </h1>
-        <p style={{
-          fontSize: 14.5,
-          color: "var(--color-text-secondary)",
-          textAlign: "center",
-          lineHeight: 1.55,
-          marginBottom: 32,
-        }}>
+        <p className="mb-8 text-center text-[14.5px] leading-[1.55] text-[var(--color-text-secondary)]">
           We&apos;ve sent a 6-digit verification code<br />
           to <strong>{email}</strong>
         </p>
 
-        <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+        <form onSubmit={handleSubmit} className="w-full">
 
           {/* OTP inputs */}
-          <div style={{ display: "flex", gap: 10, width: "100%", justifyContent: "center", marginBottom: 24 }} onPaste={handlePaste}>
+          <div className="mb-6 flex w-full justify-center gap-2.5" onPaste={handlePaste}>
             {otp.map((v, i) => (
               <input
                 key={i}
@@ -192,84 +114,40 @@ export default function StepVerify({ email, onNext }: Props) {
                 onChange={(e) => handleChange(e.target.value, i)}
                 onKeyDown={(e) => handleKey(e, i)}
                 autoComplete="one-time-code"
-                style={{
-                  width: 52,
-                  height: 58,
-                  border: `1.5px solid ${v ? "var(--color-brand-light)" : "var(--color-input-border)"}`,
-                  borderRadius: "var(--radius-input)",
-                  background: v ? "var(--color-surface)" : "var(--color-input-bg)",
-                  textAlign: "center",
-                  fontSize: 20,
-                  fontWeight: 600,
-                  color: "var(--color-text-primary)",
-                  fontFamily: "var(--font-base)",
-                  outline: "none",
-                  caretColor: "var(--color-brand)",
-                }}
+                className={`h-[58px] w-[52px] rounded-[var(--radius-input)] border-[1.5px] text-center text-[20px] font-semibold text-[var(--color-text-primary)] outline-none caret-[var(--color-brand)] ${v ? "border-[var(--color-brand-light)] bg-[var(--color-surface)]" : "border-[var(--color-input-border)] bg-[var(--color-input-bg)]"}`}
               />
             ))}
           </div>
 
           {/* Error */}
           {error && (
-            <p style={{
-              fontSize: 13,
-              color: "var(--color-error)",
-              background: "var(--color-error-bg)",
-              border: "1px solid var(--color-error-border)",
-              borderRadius: "var(--radius-input)",
-              padding: "10px 14px",
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-              marginBottom: 16,
-              margin: "0 0 16px",
-            }}>
+            <p className="mb-4 flex items-center gap-2 rounded-[var(--radius-input)] border border-[var(--color-error-border)] bg-[var(--color-error-bg)] px-3.5 py-2.5 text-[13px] text-[var(--color-error)]">
               <AlertCircle size={14} color="var(--color-error)" aria-hidden="true" />
               {error}
             </p>
           )}
 
           {/* Timer + resend */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <p style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13.5,
-              color: "var(--color-text-secondary)",
-              justifyContent: "center",
-              margin: 0,
-            }}>
+          <div className="flex flex-col items-center">
+            <p className="m-0 flex items-center justify-center gap-1.5 text-[13.5px] text-[var(--color-text-secondary)]">
               <Clock3 size={16} color="var(--color-brand)" aria-hidden="true" />
               Resend code in&nbsp;
-              <span style={{ color: "var(--color-brand-deep)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+              <span className="font-bold tabular-nums text-[var(--color-brand-deep)]">
                 {fmt(timer)}
               </span>
             </p>
 
-            <div style={{ height: 20, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 28 }}>
+            <div className="mb-7 flex h-5 items-center justify-center">
               {timer === 0 ? (
                 <button
                   type="button"
                   onClick={handleResend}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: 13.5,
-                    fontWeight: 600,
-                    color: "var(--color-brand)",
-                    fontFamily: "var(--font-base)",
-                    textDecoration: "underline",
-                    textUnderlineOffset: 2,
-                    padding: 0,
-                  }}
+                  className="bg-transparent p-0 text-[13.5px] font-semibold text-[var(--color-brand)] underline underline-offset-2"
                 >
                   Resend Code
                 </button>
               ) : (
-                <span style={{ fontSize: 13.5, color: "var(--color-brand-light)", fontWeight: 500 }}>
+                <span className="text-[13.5px] font-medium text-[var(--color-brand-light)]">
                   Resend Code
                 </span>
               )}
@@ -280,10 +158,10 @@ export default function StepVerify({ email, onNext }: Props) {
           <button
             type="submit"
             disabled={!isComplete || loading}
-            style={!isComplete || loading ? btnDisabledStyle : btnStyle}
+            className={`flex w-full items-center justify-center gap-2 rounded-[var(--radius-btn)] px-6 py-[17px] text-[15.5px] font-bold text-[var(--color-surface)] transition-all duration-200 ${!isComplete || loading ? "cursor-not-allowed bg-[linear-gradient(135deg,var(--color-btn-disabled-start),var(--color-btn-disabled-end))" : "bg-[linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))] shadow-[var(--shadow-btn)] hover:-translate-y-px hover:opacity-95 hover:shadow-[var(--shadow-btn-hover)]"}`}
           >
             {loading
-              ? <><span style={spinnerStyle} /> Verifying...</>
+              ? <><span className="inline-block h-[18px] w-[18px] animate-[auth-spin_0.7s_linear_infinite] rounded-full border-[2.5px] border-[var(--color-spinner-track)] border-t-[var(--color-surface)]" /> Verifying...</>
               : <>Verify &amp; Sign In <ArrowRight size={18} aria-hidden="true" /></>
             }
           </button>
@@ -291,18 +169,7 @@ export default function StepVerify({ email, onNext }: Props) {
         </form>
 
         {/* Encrypted badge */}
-        <p style={{
-          marginTop: 28,
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: 0.9,
-          color: "var(--color-text-faint)",
-          textTransform: "uppercase",
-          display: "flex",
-          alignItems: "center",
-          gap: 5,
-          margin: "28px 0 0",
-        }}>
+        <p className="mt-7 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.9px] text-[var(--color-text-faint)]">
           <LockKeyhole size={12} aria-hidden="true" />
           End-to-end encrypted verification
         </p>

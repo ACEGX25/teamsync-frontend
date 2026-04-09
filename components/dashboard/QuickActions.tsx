@@ -1,101 +1,54 @@
 import { Video, Building2 } from "lucide-react";
 
-export default function QuickActions() {
-  const btnBase: React.CSSProperties = {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    padding: "14px 18px",
-    borderRadius: 12,
-    border: "none",
-    fontSize: 14,
-    fontWeight: 600,
-    fontFamily: "'DM Sans', sans-serif",
-    cursor: "pointer",
-    marginBottom: 10,
-    transition: "opacity 0.2s, transform 0.15s",
-  };
+interface QuickActionsProps {
+  onStartMeeting?: () => void;
+}
 
-  const hoverOn  = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.opacity   = "0.88";
-    e.currentTarget.style.transform = "translateY(-1px)";
-  };
-  const hoverOff = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.opacity   = "1";
-    e.currentTarget.style.transform = "translateY(0)";
-  };
-
+export default function QuickActions({ onStartMeeting }: QuickActionsProps) {
   return (
-    <div style={{
-      background: "var(--color-surface)",
-      borderRadius: 18,
-      padding: 24,
-      boxShadow: "0 2px 12px rgba(100,80,160,0.06)",
-      border: "1px solid var(--color-divider)",
-    }}>
-
-      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 16 }}>
-        Quick Actions
+    <div className="rounded-[28px] border border-[var(--color-divider)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-db-card)]">
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[var(--color-text-muted)]">Quick Actions</p>
+          <h3 className="mt-1 text-[16px] font-bold tracking-[-0.02em] text-[var(--color-text-primary)]">Launch work faster</h3>
+        </div>
+        <div className="h-10 w-10 rounded-2xl bg-[var(--color-brand-xsubtle)] text-[var(--color-brand-deep)] grid place-items-center shadow-[var(--shadow-db-inset-soft)]">
+          <Video size={18} />
+        </div>
       </div>
 
-      {/* Primary button */}
       <button
-        style={{ ...btnBase, background: "var(--color-db-qa-primary-bg)", color: "var(--color-db-qa-primary-text)" }}
-        onMouseEnter={hoverOn}
-        onMouseLeave={hoverOff}
+        onClick={onStartMeeting}
+        className="group mb-3 flex w-full items-center gap-3 rounded-2xl border border-[var(--color-brand-xsubtle)] bg-[var(--color-brand-xsubtle)] px-4 py-4 text-left text-[14px] font-semibold text-[var(--color-db-qa-primary-text)] shadow-[var(--shadow-db-btn-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-db-btn-soft-hover)]"
       >
-        <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          background: "var(--color-db-quick-icon-primary-bg)",
-        }}>
-          <Video size={17} />
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[var(--color-db-quick-icon-primary-bg)] text-[var(--color-db-qa-primary-text)] transition group-hover:scale-105">
+          <Video size={17} strokeWidth={2.1} />
         </div>
-        Start a Meeting
+        <span className="flex-1">Start a Meeting</span>
+        <span className="text-[12px] opacity-70 transition group-hover:translate-x-0.5">→</span>
       </button>
 
-      {/* Secondary button */}
       <button
-        style={{ ...btnBase, background: "var(--color-db-qa-secondary-bg)", color: "var(--color-db-qa-secondary-text)", border: "1.5px solid var(--color-input-border)" }}
-        onMouseEnter={hoverOn}
-        onMouseLeave={hoverOff}
+        className="group mb-4 flex w-full items-center gap-3 rounded-2xl border border-[var(--color-input-border)] bg-[var(--color-db-qa-secondary-soft)] px-4 py-4 text-left text-[14px] font-semibold text-[var(--color-db-qa-secondary-text)] transition hover:-translate-y-0.5 hover:border-[var(--color-brand-light)] hover:shadow-[var(--shadow-db-card)]"
       >
-        <div style={{
-          width: 32, height: 32, borderRadius: 8,
-          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          background: "var(--color-db-quick-icon-secondary-bg)",
-        }}>
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[var(--color-db-quick-icon-secondary-bg)] text-[var(--color-brand-deep)] transition group-hover:scale-105">
           <Building2 size={17} />
         </div>
-        Create Organization
+        <span className="flex-1">Create Organization</span>
+        <span className="text-[12px] opacity-70 transition group-hover:translate-x-0.5">→</span>
       </button>
 
-      {/* Upcoming */}
-      <div style={{ marginTop: 16 }}>
-        <p style={{
-          fontSize: 10.5, fontWeight: 700, letterSpacing: 1,
-          color: "var(--color-db-upcoming-label)", textTransform: "uppercase", marginBottom: 10,
-        }}>
+      <div>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--color-db-upcoming-label)]">
           Upcoming Next
         </p>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "12px 14px",
-          background: "var(--color-db-upcoming-bg)",
-          borderRadius: 12,
-          border: "1px solid var(--color-divider)",
-        }}>
-          <div style={{
-            width: 3, height: 36, borderRadius: 99,
-            background: "var(--color-brand-gradient)",
-            flexShrink: 0,
-          }} />
+        <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-divider)] bg-[var(--color-db-upcoming-bg)] px-4 py-3.5 shadow-[var(--shadow-db-upcoming)]">
+          <div className="h-9 w-1 rounded-full bg-gradient-to-b from-[var(--color-brand)] to-[var(--color-brand-deep)] shadow-[var(--shadow-db-upcoming-ring)]" />
           <div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--color-text-primary)" }}>
+            <div className="text-[13.5px] font-semibold tracking-[-0.01em] text-[var(--color-text-primary)]">
               Product Sync
             </div>
-            <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 2 }}>
+            <div className="mt-0.5 text-[12px] text-[var(--color-text-muted)]">
               10:30 AM – 11:15 AM
             </div>
           </div>

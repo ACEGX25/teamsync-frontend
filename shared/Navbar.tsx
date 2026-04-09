@@ -23,167 +23,66 @@ export default function Navbar({ collapsed, onToggleCollapse, userName, userEmai
   };
 
   return (
-    <nav style={{
-      height: 56,
-      background: "var(--color-surface)",
-      borderBottom: "1px solid var(--color-divider)",
-      display: "flex",
-      alignItems: "center",
-      padding: "0 20px 0 0",
-      gap: 12,
-      flexShrink: 0,
-      zIndex: 100,
-    }}>
-
-      {/* Brand */}
-      <div style={{
-        width: collapsed ? 64 : 220,
-        minWidth: collapsed ? 64 : 220,
-        transition: "width 0.3s ease, min-width 0.3s ease",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "0 16px",
-        borderRight: "1px solid var(--color-divider)",
-        height: "100%",
-        overflow: "hidden",
-      }}>
+    <nav className="relative z-20 flex h-14 shrink-0 items-center gap-3 border-b border-[var(--color-divider)] bg-[var(--color-surface-frost)] px-0 backdrop-blur-md">
+      <div className={`flex h-full items-center gap-3 overflow-hidden border-r border-[var(--color-divider)] px-4 transition-[width,min-width] duration-300 ${collapsed ? "w-16 min-w-16" : "w-[220px] min-w-[220px]"}`}>
         <button
           type="button"
           onClick={onToggleCollapse}
           aria-label="Toggle sidebar"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            background: "var(--color-brand-gradient)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            boxShadow: "var(--shadow-btn)",
-            border: "none",
-            cursor: "pointer",
-          }}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border-none bg-gradient-to-br from-[var(--color-brand)] to-[var(--color-brand-deep)] text-[var(--color-surface)] shadow-[var(--shadow-btn)] transition hover:-translate-y-0.5 hover:opacity-95"
         >
           <CircleDot size={16} color="var(--color-db-icon-on-color)" strokeWidth={2.5} />
         </button>
 
         {!collapsed && (
-          <div style={{ overflow: "hidden", whiteSpace: "nowrap", transition: "opacity 0.2s ease, width 0.3s ease" }}>
-            <div style={{ fontFamily: "'Sora', sans-serif", fontSize: 13.5, fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1.2 }}>
+          <div className="overflow-hidden whitespace-nowrap transition-opacity duration-200">
+            <div className="font-[var(--font-display)] text-[13.5px] font-bold leading-[1.2] text-[var(--color-text-primary)]">
               TeamSync Org
             </div>
-            <div style={{ fontSize: 10.5, color: "var(--color-text-muted)", fontWeight: 500 }}>
+            <div className="text-[10.5px] font-medium text-[var(--color-text-muted)]">
               Enterprise Plan
             </div>
           </div>
         )}
       </div>
 
-      {/* Right */}
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
-
-        {/* New Meeting */}
+      <div className="ml-auto flex items-center gap-2.5 px-4">
         <button
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "0 16px",
-            height: 36,
-            background: "var(--color-brand-gradient)",
-            border: "none",
-            borderRadius: 10,
-            color: "var(--color-db-icon-on-color)",
-            fontSize: 13.5,
-            fontWeight: 600,
-            fontFamily: "'DM Sans', sans-serif",
-            cursor: "pointer",
-            boxShadow: "var(--shadow-btn)",
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.9"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)"; }}
+          className="inline-flex h-9 items-center gap-1.5 rounded-xl border-none bg-gradient-to-r from-[var(--color-brand)] to-[var(--color-brand-deep)] px-4 text-[13.5px] font-semibold text-[var(--color-surface)] shadow-[var(--shadow-btn)] transition hover:-translate-y-0.5 hover:opacity-95"
         >
           <Plus size={15} /> New Meeting
         </button>
 
-        {/* Bell */}
-        <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          border: "1.5px solid var(--color-input-border)",
-          background: "var(--color-surface)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: "var(--color-text-secondary)", position: "relative",
-        }}>
+        <div className="relative grid h-9 w-9 cursor-pointer place-items-center rounded-xl border border-[var(--color-input-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition hover:-translate-y-0.5 hover:border-[var(--color-brand-light)] hover:text-[var(--color-brand-deep)]">
           <Bell size={18} />
-          <span style={{
-            position: "absolute", top: 6, right: 6,
-            width: 7, height: 7, borderRadius: "50%",
-            background: "var(--color-error)",
-            border: "1.5px solid var(--color-surface)",
-          }} />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-[var(--color-surface)] bg-[var(--color-error)]" />
         </div>
 
-        {/* Settings */}
-        <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          border: "1.5px solid var(--color-input-border)",
-          background: "var(--color-surface)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: "var(--color-text-secondary)",
-        }}>
+        <div className="grid h-9 w-9 cursor-pointer place-items-center rounded-xl border border-[var(--color-input-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition hover:-translate-y-0.5 hover:border-[var(--color-brand-light)] hover:text-[var(--color-brand-deep)]">
           <Settings size={18} />
         </div>
 
-        {/* Avatar + Dropdown */}
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           <div
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "var(--color-db-avatar-gradient)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 13, fontWeight: 700, color: "var(--color-db-icon-on-color)",
-              cursor: "pointer", flexShrink: 0, textTransform: "uppercase",
-            }}
+            className="grid h-9 w-9 cursor-pointer place-items-center rounded-xl bg-gradient-to-br from-[var(--color-db-avatar-gradient-start)] to-[var(--color-db-avatar-gradient-end)] text-[13px] font-bold uppercase text-[var(--color-surface)] shadow-[var(--shadow-shell-avatar)] transition hover:-translate-y-0.5"
           >
             {userName ? userName.charAt(0) : "U"}
           </div>
 
           {isDropdownOpen && (
             <>
-              <div
-                style={{ position: "fixed", inset: 0, zIndex: 10 }}
-                onClick={() => setIsDropdownOpen(false)}
-              />
-              <div style={{
-                position: "absolute",
-                top: "calc(100% + 10px)",
-                right: 0,
-                background: "var(--color-surface)",
-                border: "1px solid var(--color-divider)",
-                borderRadius: 8,
-                padding: 12,
-                minWidth: 180,
-                boxShadow: "var(--shadow-card)",
-                zIndex: 20,
-                color: "var(--color-text-primary)",
-              }}>
-                <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: "1px solid var(--color-divider)" }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{userName}</div>
-                  <div style={{ fontSize: 11, color: "var(--color-text-muted)", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+              <div className="absolute right-0 top-[calc(100%+10px)] z-20 min-w-[220px] rounded-2xl border border-[var(--color-divider)] bg-[var(--color-surface)] p-3 text-[var(--color-text-primary)] shadow-[var(--shadow-card)]">
+                <div className="mb-2 border-b border-[var(--color-divider)] pb-2">
+                  <div className="text-sm font-semibold">{userName}</div>
+                  <div className="overflow-hidden text-ellipsis text-[11px] text-[var(--color-text-muted)]">
                     {userEmail}
                   </div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    width: "100%", border: "none", background: "none",
-                    color: "var(--color-error)", cursor: "pointer",
-                    padding: "6px 0", fontSize: 14, fontWeight: 500,
-                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm font-medium text-[var(--color-error)] transition hover:bg-[var(--color-error-bg)]"
                 >
                   <LogOut size={16} /> Logout
                 </button>

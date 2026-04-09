@@ -3,8 +3,21 @@ interface ActivityItemProps {
   text: string;
   highlight: string;
   time: string;
-  color: string;
+  tone: "edit" | "join" | "archive" | "success";
   isLast?: boolean;
+}
+
+function activityToneClass(tone: ActivityItemProps["tone"]) {
+  if (tone === "archive") {
+    return "bg-[var(--color-db-activity-archive)]";
+  }
+  if (tone === "join") {
+    return "bg-[var(--color-db-activity-join)]";
+  }
+  if (tone === "success") {
+    return "bg-[var(--color-db-activity-success)]";
+  }
+  return "bg-[var(--color-db-activity-edit)]";
 }
 
 export default function ActivityItem({
@@ -12,45 +25,23 @@ export default function ActivityItem({
   text,
   highlight,
   time,
-  color,
+  tone,
   isLast,
 }: ActivityItemProps) {
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "flex-start",
-      gap: 10,
-      padding: "10px 0",
-      borderBottom: isLast ? "none" : "1px solid var(--color-db-msg-divider)",
-    }}>
-      <div style={{
-        width: 28,
-        height: 28,
-        borderRadius: 8,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        background: color,
-      }}>
+    <div className={`flex items-start gap-3 py-3 ${isLast ? "border-b-0" : "border-b border-[var(--color-db-msg-divider)]"}`}>
+      <div className={`grid h-7 w-7 shrink-0 place-items-center rounded-xl shadow-[var(--shadow-db-icon)] ${activityToneClass(tone)}`}>
         {icon}
       </div>
 
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 12.5, color: "var(--color-db-act-text)", lineHeight: 1.4, margin: 0 }}>
+      <div className="min-w-0 flex-1">
+        <p className="m-0 text-[12.5px] leading-[1.45] text-[var(--color-db-act-text)]">
           {text}{" "}
-          <span style={{ fontWeight: 600, color: "var(--color-brand-deep)" }}>
+          <span className="font-semibold text-[var(--color-brand-deep)]">
             {highlight}
           </span>
         </p>
-        <p style={{
-          fontSize: 11,
-          color: "var(--color-db-msg-time)",
-          marginTop: 2,
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
-          margin: "2px 0 0",
-        }}>
+        <p className="mt-0.5 text-[11px] uppercase tracking-[0.5px] text-[var(--color-db-msg-time)]">
           {time}
         </p>
       </div>
