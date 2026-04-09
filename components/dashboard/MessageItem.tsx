@@ -4,8 +4,14 @@ interface MessageItemProps {
   time: string;
   preview: string;
   unread?: boolean;
-  color: string;
+  tone: "violet" | "green" | "red";
   isLast?: boolean;
+}
+
+function avatarToneClass(tone: MessageItemProps["tone"]) {
+  if (tone === "green") return "from-[var(--color-db-avatar-green-start)] to-[var(--color-db-avatar-green-end)]";
+  if (tone === "red") return "from-[var(--color-db-avatar-red-start)] to-[var(--color-db-avatar-red-end)]";
+  return "from-[var(--color-db-avatar-gradient-start)] to-[var(--color-db-avatar-gradient-end)]";
 }
 
 export default function MessageItem({
@@ -14,66 +20,35 @@ export default function MessageItem({
   time,
   preview,
   unread,
-  color,
+  tone,
   isLast,
 }: MessageItemProps) {
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "flex-start",
-      gap: 12,
-      padding: "12px 0",
-      borderBottom: isLast ? "none" : "1px solid var(--color-db-msg-divider)",
-      position: "relative",
-    }}>
-      <div style={{
-        width: 38,
-        height: 38,
-        borderRadius: "50%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 12,
-        fontWeight: 700,
-        color: "var(--color-db-icon-on-color)",
-        flexShrink: 0,
-        background: color,
-      }}>
+    <div className={`group relative flex items-start gap-3 py-3 ${isLast ? "border-b-0" : "border-b border-[var(--color-db-msg-divider)]"}`}>
+      <div
+        className={`grid h-[38px] w-[38px] shrink-0 place-items-center rounded-full bg-gradient-to-br ${avatarToneClass(tone)} text-[12px] font-bold text-[var(--color-db-icon-on-color)] shadow-[var(--shadow-db-icon-strong)] ring-1 ring-[var(--color-white-soft-70)]`}
+      >
         {initials}
       </div>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 3 }}>
-          <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--color-text-primary)" }}>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1.5 flex items-baseline justify-between gap-3">
+          <span className="text-[13.5px] font-semibold tracking-[-0.2px] text-[var(--color-text-primary)]">
             {name}
           </span>
-          <span style={{ fontSize: 11, color: "var(--color-db-msg-time)", whiteSpace: "nowrap" }}>
+          <span className="whitespace-nowrap text-[11px] text-[var(--color-db-msg-time)]">
             {time}
           </span>
         </div>
-        <p style={{
-          fontSize: 12.5,
-          color: "var(--color-text-secondary)",
-          lineHeight: 1.45,
-          overflow: "hidden",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          margin: 0,
-        }}>
+        <p
+          className="m-0 overflow-hidden text-[12.5px] leading-[1.5] text-[var(--color-text-secondary)] [display:-webkit-box] [WebkitBoxOrient:vertical] [WebkitLineClamp:2]"
+        >
           {preview}
         </p>
       </div>
 
       {unread && (
-        <span style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: "var(--color-brand-deep)",
-          flexShrink: 0,
-          marginTop: 14,
-        }} />
+        <span className="mt-[14px] h-2 w-2 shrink-0 rounded-full bg-[var(--color-brand-deep)] shadow-[var(--shadow-db-accent-ring)]" />
       )}
     </div>
   );

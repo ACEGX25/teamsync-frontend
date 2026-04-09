@@ -9,109 +9,33 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, active, onNavClick }: SidebarProps) {
   return (
-    <aside style={{
-      width: collapsed ? 64 : 220,
-      minWidth: collapsed ? 64 : 220,
-      background: "var(--color-surface)",
-      borderRight: "1px solid var(--color-divider)",
-      display: "flex",
-      flexDirection: "column",
-      transition: "width 0.3s ease, min-width 0.3s ease",
-      overflow: "hidden",
-      position: "relative",
-    }}>
-
-      <nav style={{
-        flex: 1,
-        padding: "16px 10px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        overflowY: "auto",
-        overflowX: "hidden",
-      }}>
-
-        {/* Invite button */}
+    <aside className={`relative flex shrink-0 flex-col overflow-hidden border-r border-[var(--color-divider)] bg-[var(--color-surface-frost)] backdrop-blur-md transition-[width,min-width] duration-300 ${collapsed ? "w-16 min-w-16" : "w-[220px] min-w-[220px]"}`}>
+      <nav className="flex flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto px-2.5 py-4">
         <button
           title={collapsed ? "Invite Members" : undefined}
-          onMouseEnter={e => (e.currentTarget.style.opacity = "0.9")}
-          onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: collapsed ? "center" : "flex-start",
-            gap: 10,
-            padding: "11px 16px",
-            borderRadius: 12,
-            background: "var(--color-brand-gradient)",
-            border: "none",
-            color: "var(--color-db-icon-on-color)",
-            fontSize: 13,
-            fontWeight: 600,
-            fontFamily: "'DM Sans', sans-serif",
-            cursor: "pointer",
-            margin: "8px 10px 12px",
-            transition: "opacity 0.2s",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            boxShadow: "0 3px 12px rgba(109,40,217,0.25)",
-          }}
+          className={`group mb-1.5 mt-2 inline-flex items-center gap-2.5 rounded-2xl border border-transparent bg-gradient-to-r from-[var(--color-brand)] to-[var(--color-brand-deep)] px-4 py-3 text-sm font-semibold text-[var(--color-surface)] shadow-[var(--shadow-shell-cta)] transition hover:-translate-y-0.5 hover:opacity-95 ${collapsed ? "justify-center" : "justify-start"}`}
         >
-          <UserPlus size={15} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+          <UserPlus size={15} strokeWidth={2.5} className="shrink-0" />
           {!collapsed && <span>Invite Members</span>}
         </button>
 
         {!collapsed && (
-          <div style={{
-            height: 1,
-            background: "var(--color-divider)",
-            margin: "8px 10px",
-            flexShrink: 0,
-          }} />
+          <div className="mx-2 my-2 h-px shrink-0 bg-[var(--color-divider)]" />
         )}
 
         {NAV_MAIN.map((item) => {
           const isActive = active === item.id;
+          const Icon = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => onNavClick(item.id)}
               title={collapsed ? item.label : undefined}
-              onMouseEnter={e => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "var(--color-brand-xsubtle)";
-                  e.currentTarget.style.color = "var(--color-brand-deep)";
-                }
-              }}
-              onMouseLeave={e => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "none";
-                  e.currentTarget.style.color = "var(--color-text-secondary)";
-                }
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: collapsed ? "center" : "flex-start",
-                gap: 10,
-                padding: "10px 12px",
-                borderRadius: 10,
-                cursor: "pointer",
-                color: isActive ? "var(--color-brand-deep)" : "var(--color-text-secondary)",
-                fontSize: 13.5,
-                fontWeight: isActive ? 600 : 500,
-                whiteSpace: "nowrap",
-                transition: "background 0.15s, color 0.15s",
-                border: "none",
-                background: isActive ? "var(--color-brand-subtle)" : "none",
-                fontFamily: "'DM Sans', sans-serif",
-                width: "100%",
-                textAlign: "left",
-              }}
+              className={`group flex w-full items-center gap-2.5 rounded-2xl border-none px-3 py-2.5 text-left text-[13.5px] font-medium transition ${collapsed ? "justify-center" : "justify-start"} ${isActive ? "bg-[var(--color-brand-subtle)] font-semibold text-[var(--color-brand-deep)] shadow-[var(--shadow-shell-active)]" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-brand-xsubtle)] hover:text-[var(--color-brand-deep)]"}`}
             >
-              {item.icon}
+              <Icon size={18} strokeWidth={2.1} className="shrink-0" />
               {!collapsed && (
-                <span style={{ transition: "opacity 0.2s ease", overflow: "hidden" }}>
+                <span className="overflow-hidden transition-opacity duration-200">
                   {item.label}
                 </span>
               )}

@@ -1,5 +1,5 @@
 import ActivityItem from "./ActivityItem";
-import { Archive, Check, Pencil, User } from "lucide-react";
+import { Archive, Check, Clock3, Pencil, User } from "lucide-react";
 
 const activities = [
   {
@@ -7,42 +7,42 @@ const activities = [
     text: "You edited the project",
     highlight: "Q4 Roadmap",
     time: "Just Now",
-    color: "var(--color-db-activity-edit)",
+    tone: "edit" as const,
   },
   {
     icon: <User size={13} color="var(--color-db-icon-on-color)" strokeWidth={2.5} />,
     text: "Jordan Lee joined",
     highlight: "Engineering Org",
     time: "45 Mins Ago",
-    color: "var(--color-db-activity-join)",
+    tone: "join" as const,
   },
   {
     icon: <Archive size={13} color="var(--color-db-icon-on-color)" strokeWidth={2.5} />,
     text: "System archived",
     highlight: "Archive_2022",
     time: "2 Hours Ago",
-    color: "var(--color-db-activity-archive)",
+    tone: "archive" as const,
   },
   {
     icon: <Check size={13} color="var(--color-db-icon-on-color)" strokeWidth={2.5} />,
     text: "You successfully",
     highlight: "migrated the database.",
     time: "Yesterday",
-    color: "var(--color-db-activity-success)",
+    tone: "success" as const,
   },
 ];
 
 export default function ActivityFeed() {
   return (
-    <div style={{
-      background: "var(--color-surface)",
-      borderRadius: 18,
-      padding: 24,
-      boxShadow: "0 2px 12px rgba(100,80,160,0.06)",
-      border: "1px solid var(--color-divider)",
-    }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 16 }}>
-        Activity
+    <div className="rounded-[28px] border border-[var(--color-divider)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-db-card)]">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[var(--color-text-muted)]">Activity</p>
+          <h3 className="mt-1 text-[16px] font-bold tracking-[-0.02em] text-[var(--color-text-primary)]">Recent workspace events</h3>
+        </div>
+        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[var(--color-brand-xsubtle)] text-[var(--color-brand-deep)] shadow-[var(--shadow-db-inset-soft)]">
+          <Clock3 size={18} />
+        </div>
       </div>
 
       {activities.map((a, i) => (
@@ -53,18 +53,8 @@ export default function ActivityFeed() {
         />
       ))}
 
-      <div style={{ marginTop: 16, textAlign: "center" }}>
-        <button style={{
-          fontSize: 12.5,
-          fontWeight: 600,
-          color: "var(--color-brand-deep)",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          fontFamily: "'DM Sans', sans-serif",
-          textDecoration: "underline",
-          textUnderlineOffset: 2,
-        }}>
+      <div className="mt-5 text-center">
+        <button className="rounded-full border border-[var(--color-brand-xsubtle)] px-3 py-1.5 text-[12.5px] font-semibold text-[var(--color-brand-deep)] underline decoration-[var(--color-brand-light)] underline-offset-4 transition hover:-translate-y-0.5 hover:bg-[var(--color-brand-xsubtle)]">
           View Full History
         </button>
       </div>

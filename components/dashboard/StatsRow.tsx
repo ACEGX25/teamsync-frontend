@@ -3,29 +3,33 @@ import { Users, MessageSquare, GitBranch, Zap } from "lucide-react";
 
 const stats = [
   {
-    icon: <Users size={20} strokeWidth={2} color="var(--color-db-stats-members-icon)" />,
-    iconBg: "var(--color-db-stats-members-bg)",
+    Icon: Users,
+    iconClass: "text-[var(--color-db-stats-members-icon)]",
+    iconBgClass: "bg-[var(--color-db-stats-members-bg)]",
     label: "ACTIVE",
     sublabel: "MEMBERS",
     value: "1,284",
   },
   {
-    icon: <MessageSquare size={20} strokeWidth={2} color="var(--color-db-stats-messages-icon)" />,
-    iconBg: "var(--color-db-stats-messages-bg)",
+    Icon: MessageSquare,
+    iconClass: "text-[var(--color-db-stats-messages-icon)]",
+    iconBgClass: "bg-[var(--color-db-stats-messages-bg)]",
     label: "DAILY",
     sublabel: "MESSAGES",
     value: "15.4k",
   },
   {
-    icon: <GitBranch size={20} strokeWidth={2} color="var(--color-db-stats-integrations-icon)" />,
-    iconBg: "var(--color-db-stats-integrations-bg)",
+    Icon: GitBranch,
+    iconClass: "text-[var(--color-db-stats-integrations-icon)]",
+    iconBgClass: "bg-[var(--color-db-stats-integrations-bg)]",
     label: "INTEGRATIONS",
     sublabel: "",
     value: "42",
   },
   {
-    icon: <Zap size={20} strokeWidth={2} color="var(--color-db-stats-sync-icon)" />,
-    iconBg: "var(--color-db-stats-sync-bg)",
+    Icon: Zap,
+    iconClass: "text-[var(--color-db-stats-sync-icon)]",
+    iconBgClass: "bg-[var(--color-db-stats-sync-bg)]",
     label: "SYNC",
     sublabel: "SPEED",
     value: "99.8%",
@@ -34,16 +38,12 @@ const stats = [
 
 export default function StatsRow() {
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(4, 1fr)",
-      gap: 16,
-    }}>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {stats.map((s) => (
         <StatCard
           key={s.label + s.sublabel}
-          icon={s.icon}
-          iconBg={s.iconBg}
+          icon={<s.Icon size={20} strokeWidth={2} className={s.iconClass} />}
+          iconBgClass={s.iconBgClass}
           label={s.label}
           sublabel={s.sublabel}
           value={s.value}

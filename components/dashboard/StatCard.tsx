@@ -3,58 +3,27 @@ interface StatCardProps {
   label: string;
   sublabel: string;
   value: string;
-  iconBg: string;
+  iconBgClass: string;
 }
 
-export default function StatCard({ icon, label, sublabel, value, iconBg }: StatCardProps) {
+export default function StatCard({ icon, label, sublabel, value, iconBgClass }: StatCardProps) {
   return (
-    <div style={{
-      background: "var(--color-surface)",
-      borderRadius: 16,
-      padding: 20,
-      display: "flex",
-      alignItems: "center",
-      gap: 14,
-      boxShadow: "0 2px 12px rgba(100,80,160,0.06)",
-      border: "1px solid var(--color-divider)",
-    }}>
-      <div style={{
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        background: iconBg,
-      }}>
-        {icon}
-      </div>
+    <div className="group relative overflow-hidden rounded-[26px] border border-[var(--color-divider)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-db-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-db-card-hover)]">
+      <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,var(--color-brand),var(--color-brand-light),var(--color-brand-deep))] opacity-80" />
+      <div className="flex items-center gap-3.5">
+        <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${iconBgClass} ring-1 ring-[var(--color-white-soft-70)] shadow-[var(--shadow-db-icon)]`}>
+          {icon}
+        </div>
 
-      <div>
-        <p style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: 0.8,
-          color: "var(--color-text-muted)",
-          textTransform: "uppercase",
-          lineHeight: 1.4,
-          margin: 0,
-        }}>
-          {label}
-          {sublabel && <span style={{ display: "block" }}>{sublabel}</span>}
-        </p>
-        <p style={{
-          fontFamily: "'Sora', sans-serif",
-          fontSize: 22,
-          fontWeight: 700,
-          color: "var(--color-text-primary)",
-          letterSpacing: -0.5,
-          marginTop: 2,
-          margin: "2px 0 0",
-        }}>
-          {value}
-        </p>
+        <div className="min-w-0">
+          <p className="m-0 text-[10.5px] font-bold uppercase leading-[1.35] tracking-[0.8px] text-[var(--color-text-muted)]">
+            {label}
+            {sublabel && <span className="block">{sublabel}</span>}
+          </p>
+          <p className="m-0 mt-0.5 font-[var(--font-display)] text-[22px] font-bold tracking-[-0.5px] text-[var(--color-text-primary)]">
+            {value}
+          </p>
+        </div>
       </div>
     </div>
   );

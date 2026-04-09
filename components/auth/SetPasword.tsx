@@ -27,6 +27,15 @@ export default function SetPassword() {
 			checks.score === 2 ? "Good" :
 				checks.score === 1 ? "Weak" : "None";
 
+	const strengthWidthClass =
+		checks.score === 3
+			? "w-full"
+			: checks.score === 2
+				? "w-2/3"
+				: checks.score === 1
+					? "w-1/3"
+					: "w-0";
+
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (checks.score < 3) {
@@ -113,8 +122,7 @@ export default function SetPassword() {
 						{/* Strength bar */}
 						<div className="h-1 bg-[var(--color-divider)] rounded-full overflow-hidden mt-1">
 							<span
-								className="block h-full rounded-full bg-[linear-gradient(90deg,var(--color-brand-light),var(--color-brand-deep))] transition-all duration-300"
-								style={{ width: `${(checks.score / 3) * 100}%` }}
+								className={`block h-full rounded-full bg-[linear-gradient(90deg,var(--color-brand-light),var(--color-brand-deep))] transition-all duration-300 ${strengthWidthClass}`}
 							/>
 						</div>
 
