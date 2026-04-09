@@ -50,9 +50,20 @@ export default function StepSecure({ email, onNext }: Props) {
       <div className="auth-card">
 
         {/* Shield */}
-        <div className="auth-shield">
-          <ShieldCheck size={24} fill="var(--color-brand)" color="white" aria-hidden="true" />
-        </div>
+        <div style={{
+  width: 52,
+  height: 52,
+  background: "linear-gradient(145deg, var(--color-brand-xsubtle), var(--color-brand-subtle))",
+  borderRadius: "var(--radius-shield)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  marginBottom: 24,
+  boxShadow: "var(--shadow-shield)",
+  flexShrink: 0,
+}}>
+  <ShieldCheck size={24} fill="var(--color-brand)" color="white" aria-hidden="true" />
+</div>
 
         <h1 className="auth-title">Secure Your Account</h1>
         <p className="auth-sub">
