@@ -78,12 +78,24 @@
   --color-db-avatar-green-end: #059669;
   --color-db-avatar-red-start: #fca5a5;
   --color-db-avatar-red-end: #e11d48;
+  --color-db-avatar-amber-start: #fbbf24;
+  --color-db-avatar-amber-end: #f97316;
+  --color-db-avatar-blue-start: #38bdf8;
+  --color-db-avatar-blue-end: #2563eb;
   --color-db-strength-track: #eeebf8;
   --color-db-strength-strong: #10b981;
   --color-db-strength-medium: #f59e0b;
   --color-db-strength-weak: #f43f5e;
   --color-db-surface-glass: rgba(255, 255, 255, 0.34);
   --color-surface-frost: rgba(255, 255, 255, 0.88);
+  --color-surface-frost-90: rgba(255, 255, 255, 0.9);
+  --color-overlay-dark: rgba(0, 0, 0, 0.45);
+  --color-status-warn-bg: rgba(245, 158, 11, 0.12);
+  --gradient-meeting-chat: linear-gradient(
+    180deg,
+    rgba(248, 245, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
   --gradient-db-glow-left: radial-gradient(
     circle,
     rgba(124, 92, 191, 0.18) 0%,
@@ -96,6 +108,8 @@
   );
   --color-db-quick-icon-primary-bg: rgba(109, 40, 217, 0.15);
   --color-db-quick-icon-secondary-bg: #ece9f8;
+  --color-meeting-mic-on-bg: #ede9fe;
+  --color-meeting-mic-on-text: #6d28d9;
 
   /* Radius */
   --radius-page: 28px;
@@ -126,6 +140,9 @@
   --shadow-shell-cta: 0 12px 24px rgba(109, 40, 217, 0.22);
   --shadow-shell-avatar: 0 10px 22px rgba(109, 40, 217, 0.22);
   --shadow-shell-active: 0 10px 18px rgba(98, 65, 168, 0.08);
+  --shadow-meeting-toggle-active: 0 1px 3px rgba(98, 65, 168, 0.18);
+  --shadow-meeting-self: 0 12px 30px rgba(55, 45, 95, 0.1);
+  --shadow-meeting-send: 0 8px 18px rgba(98, 65, 168, 0.22);
 
   /* Typography */
   --font-base: "DM Sans", sans-serif;
