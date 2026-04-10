@@ -9,6 +9,7 @@ import QuickActions from "@/components/dashboard/QuickActions";
 import RecentMessages from "@/components/dashboard/RecentMessages";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import StatsRow from "@/components/dashboard/StatsRow";
+import PageRenderer from "@/shared/PageRenderer";
 import { authApi, type AuthUser } from "@/utils/api";
 
 export default function DashboardPage() {
@@ -64,29 +65,32 @@ export default function DashboardPage() {
         />
 
         <main className="relative flex-1 overflow-y-auto px-4 py-5 sm:px-5 sm:py-6 lg:px-6 lg:py-6">
-          <div className="flex w-full flex-col gap-5">
-            <section className="rounded-[28px] border border-[var(--color-divider)] bg-[var(--color-db-surface-glass)] px-6 py-5 shadow-[var(--shadow-db-hero)] backdrop-blur-[2px] sm:px-7 sm:py-6">
-              <h1 className="font-[var(--font-display)] text-[28px] font-bold tracking-[-0.05em] text-[var(--color-text-primary)] sm:text-[32px]">
-                Welcome Back, {userName}.
-              </h1>
-              <p className="mt-2 max-w-2xl text-[14px] leading-[1.65] text-[var(--color-text-secondary)]">
-                {loadingUser
-                  ? "Loading your workspace details..."
-                  : userEmail
-                    ? `Signed in as ${userEmail}. You are all set to collaborate.`
-                    : "Your workspace details are ready."}
-              </p>
-            </section>
-
-            <StatsRow />
-
-            <div className="grid gap-5 xl:grid-cols-[1fr_1.35fr_1fr]">
-              <QuickActions onStartMeeting={handleStartMeeting} />
-              <RecentMessages />
-              <ActivityFeed />
-            </div>
-          </div>
-        </main>
+  <PageRenderer
+    active={active}
+    dashboardContent={
+      <div className="flex w-full flex-col gap-5">
+        <section className="rounded-[28px] border border-[var(--color-divider)] bg-[var(--color-db-surface-glass)] px-6 py-5 shadow-[var(--shadow-db-hero)] backdrop-blur-[2px] sm:px-7 sm:py-6">
+          <h1 className="font-[var(--font-display)] text-[28px] font-bold tracking-[-0.05em] text-[var(--color-text-primary)] sm:text-[32px]">
+            Welcome Back, {userName}.
+          </h1>
+          <p className="mt-2 max-w-2xl text-[14px] leading-[1.65] text-[var(--color-text-secondary)]">
+            {loadingUser
+              ? "Loading your workspace details..."
+              : userEmail
+                ? `Signed in as ${userEmail}. You are all set to collaborate.`
+                : "Your workspace details are ready."}
+          </p>
+        </section>
+        <StatsRow />
+        <div className="grid gap-5 xl:grid-cols-[1fr_1.35fr_1fr]">
+          <QuickActions onStartMeeting={handleStartMeeting} />
+          <RecentMessages />
+          <ActivityFeed />
+        </div>
+      </div>
+    }
+  />
+</main>
       </div>
     </div>
   );

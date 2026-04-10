@@ -8,7 +8,6 @@ import {
   sanitizePrimaverseEmailInput,
   toPrimaverseEmail,
 } from "@/utils/validation/LoginValidation";
-import Footer from "@/shared/Footer";
 
 type Step = "landing" | "verify" | "secure" | "login";
 
@@ -117,7 +116,7 @@ export default function StepLanding({ onNext }: Props) {
         </div>
 
       </div>
-      <Footer />
+
     </div>
   );
 }

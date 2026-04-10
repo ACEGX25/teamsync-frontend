@@ -4,6 +4,28 @@
 @source "../components/**/*.{js,ts,jsx,tsx,mdx}";
 @source "../shared/**/*.{js,ts,jsx,tsx,mdx}";
 
+
+@theme {
+  --font-family-base: "DM Sans", sans-serif;
+  --font-family-display: "Sora", sans-serif;
+
+  --animate-landing-float: landing-float 3s ease-in-out infinite;
+  --animate-landing-blink: landing-blink 1.8s ease-in-out infinite;
+  --animate-auth-spin: auth-spin 0.7s linear infinite;
+
+  @keyframes landing-float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-5px); }
+  }
+  @keyframes landing-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+  }
+  @keyframes auth-spin {
+    to { transform: rotate(360deg); }
+  }
+}
+
 :root {
   /* Brand */
   --color-brand: #7c5cbf;
@@ -178,6 +200,8 @@ body {
   margin: 0;
   padding: 0;
 }
+
+
 
 @keyframes auth-spin {
   to {
