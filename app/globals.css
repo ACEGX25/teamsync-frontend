@@ -1,26 +1,208 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap");
 @import "tailwindcss";
+@source "./**/*.{js,ts,jsx,tsx,mdx}";
+@source "../components/**/*.{js,ts,jsx,tsx,mdx}";
+@source "../shared/**/*.{js,ts,jsx,tsx,mdx}";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand */
+  --color-brand: #7c5cbf;
+  --color-brand-deep: #6241a8;
+  --color-brand-light: #b8a8e0;
+  --color-brand-subtle: #e8e0fa;
+  --color-brand-xsubtle: #f0ebff;
+  --color-bg-dashboard: #f4f3fb;
+  --color-db-msg-divider: #f0eef8;
+  --color-db-msg-time: #b0abc8;
+  --color-db-qa-primary-bg: linear-gradient(135deg, #e0d4fa, #d4c4f7);
+  --color-db-qa-primary-text: #5b21b6;
+  --color-db-qa-secondary-bg: #f5f4fc;
+  --color-db-qa-secondary-text: #4a4468;
+  --color-db-qa-secondary-soft: #f9f8fe;
+  --color-db-upcoming-bg: #f8f7fd;
+  --color-db-upcoming-label: #b0abc8;
+  --color-white-soft-70: rgba(255, 255, 255, 0.7);
+  --color-brand-gradient: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  --color-db-avatar-gradient: linear-gradient(135deg, #a78bfa, #7c3aed);
+  /* Neutrals */
+  --color-text-primary: #1a1a2e;
+  --color-text-secondary: #7a7a9a;
+  --color-text-muted: #9090b0;
+  --color-text-placeholder: #c0bed8;
+  --color-text-faint: #a0a0be;
+  --color-db-act-text: #4a4468;
+  /* Surfaces */
+  --color-bg-page-start: #e8e4f3;
+  --color-bg-page-mid: #f0eef8;
+  --color-bg-page-end: #e8ecf5;
+  --color-spinner-track: rgba(255, 255, 255, 0.3);
+  --color-surface: #ffffff;
+  --color-input-bg: #fafafa;
+  --color-input-border: #e2e0f0;
+  --color-divider: #ece9f8;
+  --color-btn-disabled-start: #b3a3d8;
+  --color-btn-disabled-end: #a090c8;
+  --color-auth-av-1-start: #a78bfa;
+  --color-auth-av-2-start: #6ee7b7;
+  --color-auth-av-2-end: #3b82f6;
+  --color-auth-av-3-start: #fca5a5;
+  --color-auth-av-3-end: #f472b6;
+  /* Semantic */
+  --color-error: #ef4444;
+  --color-error-bg: #fff5f5;
+  --color-error-border: #fecaca;
+  --color-warn: #f59e0b;
+  --color-success: #8b5cf6;
+  --color-optimal: #6d28d9;
+  --color-landing-brand: #1a1235;
+  --color-orb-ring-1: rgba(150, 120, 230, 0.18);
+  --color-orb-ring-2: rgba(150, 120, 230, 0.11);
+  --color-orb-ring-3: rgba(150, 120, 230, 0.07);
+  /* Dashboard palette */
+  --color-db-icon-on-color: #ffffff;
+  --color-db-activity-edit: #8b5cf6;
+  --color-db-activity-join: #3b82f6;
+  --color-db-activity-archive: #f59e0b;
+  --color-db-activity-success: #10b981;
+  --color-db-stats-members-icon: #7c3aed;
+  --color-db-stats-members-bg: #f0ebff;
+  --color-db-stats-messages-icon: #059669;
+  --color-db-stats-messages-bg: #ecfdf5;
+  --color-db-stats-integrations-icon: #7c3aed;
+  --color-db-stats-integrations-bg: #f5f3ff;
+  --color-db-stats-sync-icon: #0ea5e9;
+  --color-db-stats-sync-bg: #f0f9ff;
+  --color-db-avatar-gradient-start: #a78bfa;
+  --color-db-avatar-gradient-end: #7c3aed;
+  --color-db-avatar-green-start: #6ee7b7;
+  --color-db-avatar-green-end: #059669;
+  --color-db-avatar-red-start: #fca5a5;
+  --color-db-avatar-red-end: #e11d48;
+  --color-db-avatar-amber-start: #fbbf24;
+  --color-db-avatar-amber-end: #f97316;
+  --color-db-avatar-blue-start: #38bdf8;
+  --color-db-avatar-blue-end: #2563eb;
+  --color-db-strength-track: #eeebf8;
+  --color-db-strength-strong: #10b981;
+  --color-db-strength-medium: #f59e0b;
+  --color-db-strength-weak: #f43f5e;
+  --color-db-surface-glass: rgba(255, 255, 255, 0.34);
+  --color-surface-frost: rgba(255, 255, 255, 0.88);
+  --color-surface-frost-90: rgba(255, 255, 255, 0.9);
+  --color-overlay-dark: rgba(0, 0, 0, 0.45);
+  --color-status-warn-bg: rgba(245, 158, 11, 0.12);
+  --gradient-meeting-chat: linear-gradient(
+    180deg,
+    rgba(248, 245, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  --gradient-db-glow-left: radial-gradient(
+    circle,
+    rgba(124, 92, 191, 0.18) 0%,
+    rgba(124, 92, 191, 0) 68%
+  );
+  --gradient-db-glow-right: radial-gradient(
+    circle,
+    rgba(159, 212, 236, 0.22) 0%,
+    rgba(159, 212, 236, 0) 70%
+  );
+  --color-db-quick-icon-primary-bg: rgba(109, 40, 217, 0.15);
+  --color-db-quick-icon-secondary-bg: #ece9f8;
+  --color-meeting-mic-on-bg: #ede9fe;
+  --color-meeting-mic-on-text: #6d28d9;
+
+  /* Radius */
+  --radius-page: 28px;
+  --radius-input: 12px;
+  --radius-btn: 14px;
+  --radius-shield: 14px;
+  --radius-dot: 50%;
+
+  /* Shadows */
+  --shadow-card:
+    0 8px 40px rgba(100, 80, 160, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-shield: 0 2px 8px rgba(120, 80, 200, 0.12);
+  --shadow-btn: 0 6px 20px rgba(98, 65, 168, 0.35);
+  --shadow-btn-hover: 0 8px 26px rgba(98, 65, 168, 0.42);
+  --shadow-focus: 0 0 0 3px rgba(124, 92, 191, 0.12);
+  --shadow-db-hero: 0 12px 30px rgba(100, 80, 160, 0.06);
+  --shadow-db-card: 0 14px 34px rgba(100, 80, 160, 0.06);
+  --shadow-db-card-hover: 0 18px 42px rgba(100, 80, 160, 0.09);
+  --shadow-db-icon: 0 8px 18px rgba(100, 80, 160, 0.1);
+  --shadow-db-icon-strong: 0 8px 18px rgba(100, 80, 160, 0.14);
+  --shadow-db-accent-ring: 0 0 0 3px rgba(98, 65, 168, 0.12);
+  --shadow-db-inset-soft: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --shadow-db-btn-soft: 0 10px 22px rgba(109, 40, 217, 0.06);
+  --shadow-db-btn-soft-hover: 0 14px 28px rgba(109, 40, 217, 0.1);
+  --shadow-db-upcoming: 0 10px 22px rgba(100, 80, 160, 0.04);
+  --shadow-db-upcoming-ring: 0 0 0 4px rgba(124, 92, 191, 0.08);
+  --shadow-db-pill: 0 8px 18px rgba(98, 65, 168, 0.08);
+  --shadow-shell-cta: 0 12px 24px rgba(109, 40, 217, 0.22);
+  --shadow-shell-avatar: 0 10px 22px rgba(109, 40, 217, 0.22);
+  --shadow-shell-active: 0 10px 18px rgba(98, 65, 168, 0.08);
+  --shadow-meeting-toggle-active: 0 1px 3px rgba(98, 65, 168, 0.18);
+  --shadow-meeting-self: 0 12px 30px rgba(55, 45, 95, 0.1);
+  --shadow-meeting-send: 0 8px 18px rgba(98, 65, 168, 0.22);
+
+  /* Typography */
+  --font-base: "DM Sans", sans-serif;
+  --font-display: "Sora", sans-serif;
+
+  /* Landing-specific */
+  --color-landing-bg: #ededf7;
+  --color-landing-card-border: rgba(180, 170, 230, 0.18);
+  --color-landing-input-bg: #f5f4fc;
+  --color-landing-input-border: #e0ddf3;
+  --color-orb-start: #8b5cf6;
+  --color-orb-end: #7c3aed;
+  --shadow-orb: 0 4px 24px rgba(124, 58, 237, 0.35);
+  --shadow-landing-card:
+    0 8px 40px rgba(120, 100, 220, 0.1), 0 2px 8px rgba(120, 100, 220, 0.06);
+
+  /* Auth */
+  --color-auth-page-mid: #eef0f8;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.18s ease;
+  --transition-med: 0.2s ease;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes landing-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
 }

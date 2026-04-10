@@ -1,55 +1,108 @@
 "use client";
 
-import { UserProfile } from "@/types/profile";
+import { LoginProfile } from "@/types/profile";
 
 interface PersonalInfoSectionProps {
-  profile: UserProfile;
-  onChange: (field: keyof UserProfile, value: string) => void;
+  login: LoginProfile;
+  onChange: (field: keyof Pick<LoginProfile, "fullName" | "email">, value: string) => void;
 }
 
-export default function PersonalInfoSection({ profile, onChange }: PersonalInfoSectionProps) {
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "0.55rem 0.75rem",
+  border: "1px solid var(--color-input-border)",
+  borderRadius: "var(--radius-input)",
+  fontSize: "0.875rem",
+  fontFamily: "var(--font-base)",
+  color: "var(--color-text-primary)",
+  background: "var(--color-input-bg)",
+  outline: "none",
+  transition: "border-color 0.15s, box-shadow 0.15s",
+};
+
+export default function PersonalInfoSection({ login, onChange }: PersonalInfoSectionProps) {
   return (
-    <section className="form-section">
-      <p className="section-label">IDENTITY</p>
-      <h2 className="section-title">Personal Information</h2>
+    <section
+      className="rounded-2xl p-6"
+      style={{
+        background: "var(--color-surface)",
+        border: "1px solid var(--color-divider)",
+        boxShadow: "var(--shadow-db-card)",
+      }}
+    >
+      <p className="mb-1 text-[0.68rem] font-bold tracking-widest" style={{ color: "var(--color-brand)" }}>
+        IDENTITY
+      </p>
+      <h2 className="mb-5 text-[1.05rem] font-bold" style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}>
+        Personal Information
+      </h2>
 
-      <div className="form-grid">
-        <div className="form-field">
-          <label className="field-label">Display Name</label>
+      <div className="grid grid-cols-2 gap-4">
+        {/* fullName — from Login.fullName */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[0.8rem] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+            Full Name
+          </label>
           <input
-            className="field-input"
-            value={profile.displayName}
-            onChange={(e) => onChange("displayName", e.target.value)}
+            type="text"
+            value={login.fullName}
+            onChange={(e) => onChange("fullName", e.target.value)}
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = "var(--color-brand)"; e.target.style.boxShadow = "var(--shadow-focus)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "var(--color-input-border)"; e.target.style.boxShadow = "none"; }}
           />
         </div>
 
-        <div className="form-field">
-          <label className="field-label">Email Address</label>
+        {/* email — from Login.email */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[0.8rem] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+            Email Address
+          </label>
           <input
-            className="field-input"
             type="email"
-            value={profile.email}
+            value={login.email}
             onChange={(e) => onChange("email", e.target.value)}
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = "var(--color-brand)"; e.target.style.boxShadow = "var(--shadow-focus)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "var(--color-input-border)"; e.target.style.boxShadow = "none"; }}
           />
         </div>
 
-        <div className="form-field">
-          <label className="field-label">Phone Number</label>
+        {/* userId — read-only */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[0.8rem] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+            User ID
+          </label>
           <input
-            className="field-input"
-            type="tel"
-            value={profile.phone}
-            onChange={(e) => onChange("phone", e.target.value)}
+            type="text"
+            value={`#${login.userId}`}
+            readOnly
+            style={{ ...inputStyle, background: "var(--color-brand-xsubtle)", cursor: "not-allowed", color: "var(--color-text-muted)" }}
           />
         </div>
 
-        <div className="form-field">
-          <label className="field-label">Professional Headline</label>
-          <input
-            className="field-input"
-            value={profile.professionalHeadline}
-            onChange={(e) => onChange("professionalHeadline", e.target.value)}
-          />
+        {/* isVerified — read-only status */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[0.8rem] font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+            Account Status
+          </label>
+          <div
+            className="flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{
+              border: "1px solid var(--color-input-border)",
+              background: login.isVerified ? "var(--color-brand-xsubtle)" : "var(--color-error-bg)",
+              fontSize: "0.875rem",
+              fontFamily: "var(--font-base)",
+            }}
+          >
+            <span
+              className="h-2 w-2 rounded-full flex-shrink-0"
+              style={{ background: login.isVerified ? "var(--color-brand)" : "var(--color-error)" }}
+            />
+            <span style={{ color: login.isVerified ? "var(--color-brand)" : "var(--color-error)", fontWeight: 600 }}>
+              {login.isVerified ? "Verified" : "Not Verified"}
+            </span>
+          </div>
         </div>
       </div>
     </section>
