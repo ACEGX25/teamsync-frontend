@@ -34,12 +34,7 @@ export default function OrgStats({ orgs, loading }: Props) {
       {stats.map(({ label, value, icon: Icon, bg, iconColor }) => (
         <div
           key={label}
-          className="rounded-[20px] border border-[var(--color-divider)] p-5 transition hover:shadow-[var(--shadow-db-card-hover)]"
-          style={{
-            background: "var(--color-db-surface-glass)",
-            backdropFilter: "blur(2px)",
-            boxShadow: "var(--shadow-db-card)",
-          }}
+          className="rounded-[20px] border border-[var(--color-divider)] p-5 transition hover:shadow-[var(--shadow-db-card-hover)] bg-[var(--color-db-surface-glass)] backdrop-blur-[2px] shadow-[var(--shadow-db-card)]"
         >
           <div className="flex items-center gap-2.5 mb-3">
             <div
@@ -52,10 +47,7 @@ export default function OrgStats({ orgs, loading }: Props) {
               {label}
             </span>
           </div>
-          <p
-            className="text-[28px] font-bold tracking-[-0.03em] text-[var(--color-text-primary)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <p className="text-[28px] font-bold tracking-[-0.03em] text-[var(--color-text-primary)] font-[family-name:var(--font-display)]">
             {value}
           </p>
         </div>

@@ -35,46 +35,28 @@ export default function OrgTable({
 
   return (
     <div
-      className="rounded-[20px] overflow-hidden"
-      style={{
-        border: "1px solid var(--color-divider)",
-        background: "var(--color-db-surface-glass)",
-        backdropFilter: "blur(2px)",
-        boxShadow: "var(--shadow-db-card)",
-      }}
+      className="rounded-[20px] overflow-hidden border-[1px] border-solid border-[var(--color-divider)] bg-[var(--color-db-surface-glass)] backdrop-blur-[2px] shadow-[var(--shadow-db-card)]"
     >
       {/* Toolbar — compact search pinned to the right */}
       <div
-        className="flex items-center justify-end px-5 py-3"
-        style={{ borderBottom: "1px solid var(--color-divider)" }}
+        className="flex items-center justify-end px-5 py-3 border-b border-b-[var(--color-divider)]"
       >
         <div className="relative flex items-center">
           <Search
             size={13}
-            className="absolute left-3 pointer-events-none"
-            style={{ color: "var(--color-text-muted)" }}
+            className="absolute left-3 pointer-events-none text-[var(--color-text-muted)]"
           />
           <input
             type="text"
             placeholder="Search organizations..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="rounded-xl py-1.5 pl-8 pr-3 text-[13px] outline-none transition"
-            style={{
-              width: "220px",
-              border: "1px solid var(--color-divider)",
-              background: "var(--color-surface-frost)",
-              color: "var(--color-text-primary)",
-            }}
+            className="rounded-xl py-1.5 pl-8 pr-3 text-[13px] outline-none transition w-[220px] border border-[var(--color-divider)] bg-[var(--color-surface-frost)] text-[var(--color-text-primary)]"
           />
           {search && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-2.5 text-[11px] px-1.5 py-0.5 rounded transition"
-              style={{
-                color: "var(--color-text-muted)",
-                background: "var(--color-brand-xsubtle)",
-              }}
+              className="absolute right-2.5 text-[11px] px-1.5 py-0.5 rounded transition text-[var(--color-text-muted)] bg-[var(--color-brand-xsubtle)]"
             >
               Clear
             </button>
@@ -89,19 +71,13 @@ export default function OrgTable({
       ) : (
         <table className="w-full text-[15px]">
           <thead>
-            <tr
-              style={{
-                background: "var(--color-brand-xsubtle)",
-                borderBottom: "2px solid var(--color-brand-subtle)",
-              }}
-            >
+            <tr className="bg-[var(--color-brand-xsubtle)] border-b-2 border-b-[var(--color-brand-subtle)]">
               {["Organization", "Members", "Created", "Actions"].map((h) => (
                 <th
                   key={h}
-                  className={`py-5 px-5 font-bold text-[13px] uppercase tracking-widest ${
+                  className={`py-5 px-5 font-bold text-[13px] uppercase tracking-widest text-[var(--color-brand-deep)] ${
                     h === "Actions" ? "text-right" : "text-left"
                   }`}
-                  style={{ color: "var(--color-brand-deep)" }}
                 >
                   {h}
                 </th>
@@ -113,8 +89,7 @@ export default function OrgTable({
               <tr>
                 <td
                   colSpan={4}
-                  className="py-12 text-center text-[13px]"
-                  style={{ color: "var(--color-text-muted)" }}
+                  className="py-12 text-center text-[13px] text-[var(--color-text-muted)]"
                 >
                   No organizations found.
                 </td>
@@ -125,18 +100,9 @@ export default function OrgTable({
                 return (
                   <tr
                     key={org.id ?? i}
-                    className="transition-colors group"
-                    style={
-                      i !== filtered.length - 1
-                        ? { borderBottom: "1px solid var(--color-divider)" }
-                        : {}
-                    }
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "var(--color-brand-xsubtle)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "transparent")
-                    }
+                    className={`transition-colors group hover:bg-[var(--color-brand-xsubtle)] ${
+                      i !== filtered.length - 1 ? "border-b border-[var(--color-divider)]" : ""
+                    }`}
                   >
                     {/* Org name */}
                     <td className="px-5 py-4">
@@ -147,32 +113,23 @@ export default function OrgTable({
                         >
                           {org.orgName[0].toUpperCase()}
                         </div>
-                        <span
-                          className="font-semibold"
-                          style={{ color: "var(--color-text-primary)" }}
-                        >
+                        <span className="font-semibold text-[var(--color-text-primary)]">
                           {org.orgName}
                         </span>
                       </div>
                     </td>
 
                     {/* Member count */}
-                    <td
-                      className="px-5 py-4"
-                      style={{ color: "var(--color-text-secondary)" }}
-                    >
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">
                       {org.memberCount ?? "—"}
                     </td>
 
                     {/* Created date */}
-                    <td
-                      className="px-5 py-4"
-                      style={{ color: "var(--color-text-secondary)" }}
-                    >
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">
                       <div className="flex items-center gap-1.5">
                         <Calendar
                           size={12}
-                          style={{ color: "var(--color-text-muted)" }}
+                          className="text-[var(--color-text-muted)]"
                         />
                         {org.createdAt
                           ? new Date(org.createdAt).toLocaleDateString("en-US", {
@@ -189,13 +146,7 @@ export default function OrgTable({
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => onViewChat(org)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition"
-                          style={{
-                            background: "var(--color-brand-subtle)",
-                            color: "var(--color-brand-deep)",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
-                          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition bg-[var(--color-brand-subtle)] text-[var(--color-brand-deep)] hover:opacity-80"
                         >
                           <MessageSquare size={13} />
                           View
@@ -203,16 +154,7 @@ export default function OrgTable({
 
                         <button
                           onClick={() => onDelete(org.orgId)}
-                          className="p-1.5 rounded-lg transition"
-                          style={{ color: "var(--color-text-muted)" }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "var(--color-error-bg)";
-                            e.currentTarget.style.color = "var(--color-error)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
-                            e.currentTarget.style.color = "var(--color-text-muted)";
-                          }}
+                          className="p-1.5 rounded-lg transition text-[var(--color-text-muted)] hover:bg-[var(--color-error-bg)] hover:text-[var(--color-error)]"
                         >
                           <Trash2 size={16} />
                         </button>

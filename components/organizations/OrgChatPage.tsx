@@ -124,32 +124,20 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
     <div ref={containerRef} className="w-full">
       {topOffset > 0 && (
         <div
-          className="fixed left-0 right-0 flex overflow-hidden"
-          style={{
-            top: topOffset,
-            bottom: 0,
-            zIndex: 10,
-            background: "var(--color-background, #faf8ff)",
-          }}
+          className="fixed left-0 right-0 flex overflow-hidden z-10 bg-[var(--color-bg-dashboard)]"
+          style={{ top: topOffset, bottom: 0 }}
         >
           {/* ── Main chat area ── */}
           <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
 
             {/* Header */}
             <header
-              className="flex items-center gap-3 px-6 h-16 shrink-0"
-              style={{
-                borderBottom: "1px solid var(--color-divider, #e0e2f0)",
-                background: "var(--color-surface, #faf8ff)",
-              }}
+              className="flex items-center gap-3 px-6 h-16 shrink-0 border-b border-[var(--color-divider)] bg-[var(--color-surface)]"
             >
               {/* Back */}
               <button
                 onClick={onBack}
-                className="flex items-center justify-center w-9 h-9 rounded-xl transition-colors shrink-0"
-                style={{ color: "var(--color-text-secondary, #635b71)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-brand-xsubtle, #ede9f8)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                className="flex items-center justify-center w-9 h-9 rounded-xl transition-colors shrink-0 text-[var(--color-text-secondary)] hover:bg-[var(--color-brand-xsubtle)]"
                 title="Back to organizations"
               >
                 <ArrowLeft size={18} />
@@ -157,29 +145,21 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
 
               {/* Org avatar */}
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-[13px] font-bold text-white shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, var(--color-brand, #6e49b6), var(--color-brand-deep, #4a2d8c))",
-                }}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-[13px] font-bold text-white shrink-0 bg-[image:linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))]"
               >
                 {orgName[0]?.toUpperCase()}
               </div>
 
               {/* Org name */}
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <span className="text-[14px] font-medium" style={{ color: "var(--color-text-muted, #777a87)" }}>#</span>
+                <span className="text-[14px] font-medium text-[var(--color-text-muted)]">#</span>
                 <span
-                  className="text-[17px] font-bold tracking-tight truncate"
-                  style={{ color: "var(--color-text-primary, #2f323d)" }}
+                  className="text-[17px] font-bold tracking-tight truncate text-[var(--color-text-primary)]"
                 >
                   {orgName}
                 </span>
                 <span
-                  className="ml-2 text-[11px] font-medium px-2.5 py-0.5 rounded-full shrink-0"
-                  style={{
-                    background: "var(--color-brand-subtle, #ede9f8)",
-                    color: "var(--color-brand, #6e49b6)",
-                  }}
+                  className="ml-2 text-[11px] font-medium px-2.5 py-0.5 rounded-full shrink-0 bg-[var(--color-brand-subtle)] text-[var(--color-brand)]"
                 >
                   {membersLoading ? "…" : `${members.length} members`}
                 </span>
@@ -193,13 +173,7 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
                   setInviteSuccess("");
                   setInviteEmail("");
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all active:scale-95 shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, var(--color-brand, #6e49b6), var(--color-brand-deep, #4a2d8c))",
-                  boxShadow: "0 4px 12px rgba(110,73,182,0.25)",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all active:scale-95 shrink-0 bg-[image:linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))] shadow-[0_4px_12px_rgba(110,73,182,0.25)] hover:opacity-90"
               >
                 <UserPlus size={15} />
                 Add Members
@@ -224,39 +198,27 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
             <>
               {/* Backdrop */}
               <div
-                className="absolute inset-0 z-20"
-                style={{ background: "rgba(47,50,61,0.35)", backdropFilter: "blur(4px)" }}
+                className="absolute inset-0 z-20 bg-[#2f323d59] backdrop-blur-sm"
                 onClick={() => setShowAddMember(false)}
               />
 
               {/* Modal */}
               <div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 w-full max-w-md rounded-[24px] p-7"
-                style={{
-                  background: "var(--color-surface, #faf8ff)",
-                  border: "1px solid var(--color-divider, #e0e2f0)",
-                  boxShadow: "0 24px 64px rgba(47,50,61,0.18)",
-                }}
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 w-full max-w-md rounded-[24px] p-7 bg-[var(--color-surface)] border border-[var(--color-divider)] shadow-[0_24px_64px_rgba(47,50,61,0.18)]"
               >
                 {/* Modal header */}
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2
-                      className="text-[18px] font-bold tracking-tight"
-                      style={{ color: "var(--color-text-primary, #2f323d)" }}
-                    >
+                    <h2 className="text-[18px] font-bold tracking-tight text-[var(--color-text-primary)]">
                       Add Members
                     </h2>
-                    <p className="text-[12.5px] mt-0.5" style={{ color: "var(--color-text-muted, #777a87)" }}>
+                    <p className="text-[12.5px] mt-0.5 text-[var(--color-text-muted)]">
                       Invite someone to <span className="font-semibold">#{orgName}</span>
                     </p>
                   </div>
                   <button
                     onClick={() => setShowAddMember(false)}
-                    className="w-8 h-8 rounded-xl flex items-center justify-center transition"
-                    style={{ color: "var(--color-text-secondary, #635b71)" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-brand-xsubtle, #ede9f8)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center transition text-[var(--color-text-secondary)] hover:bg-[var(--color-brand-xsubtle)]"
                   >
                     <X size={16} />
                   </button>
@@ -264,8 +226,7 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
 
                 {/* Input */}
                 <label
-                  className="block text-[12px] font-medium uppercase tracking-wider mb-2"
-                  style={{ color: "var(--color-text-muted, #777a87)" }}
+                  className="block text-[12px] font-medium uppercase tracking-wider mb-2 text-[var(--color-text-muted)]"
                 >
                   Email address or User ID
                 </label>
@@ -280,25 +241,16 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
                   }}
                   onKeyDown={(e) => e.key === "Enter" && handleInvite()}
                   autoFocus
-                  className="w-full rounded-xl px-4 py-3 text-[13.5px] outline-none transition"
-                  style={{
-                    border: "1px solid var(--color-divider, #e0e2f0)",
-                    background: "var(--color-surface-container-low, #f3f3fd)",
-                    color: "var(--color-text-primary, #2f323d)",
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.boxShadow = "0 0 0 3px rgba(110,73,182,0.15)")
-                  }
-                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                  className="w-full rounded-xl px-4 py-3 text-[13.5px] outline-none transition border border-[var(--color-divider)] bg-[var(--color-bg-dashboard)] text-[var(--color-text-primary)] focus:shadow-[0_0_0_3px_rgba(110,73,182,0.15)]"
                 />
 
                 {inviteError && (
-                  <p className="text-[12.5px] mt-2" style={{ color: "var(--color-error, #a8364b)" }}>
+                  <p className="text-[12.5px] mt-2 text-[var(--color-error)]">
                     {inviteError}
                   </p>
                 )}
                 {inviteSuccess && (
-                  <p className="text-[12.5px] mt-2" style={{ color: "#059669" }}>
+                  <p className="text-[12.5px] mt-2 text-[#059669]">
                     ✓ {inviteSuccess}
                   </p>
                 )}
@@ -307,24 +259,16 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => setShowAddMember(false)}
-                    className="flex-1 rounded-xl py-2.5 text-[13.5px] font-medium transition"
-                    style={{
-                      border: "1px solid var(--color-divider, #e0e2f0)",
-                      color: "var(--color-text-secondary, #635b71)",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-brand-xsubtle, #ede9f8)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    className="flex-1 rounded-xl py-2.5 text-[13.5px] font-medium transition border border-[var(--color-divider)] text-[var(--color-text-secondary)] hover:bg-[var(--color-brand-xsubtle)]"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleInvite}
                     disabled={inviting}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-[13.5px] font-semibold text-white transition disabled:opacity-60"
-                    style={{
-                      background: "linear-gradient(135deg, var(--color-brand, #6e49b6), var(--color-brand-deep, #4a2d8c))",
-                      boxShadow: inviting ? "none" : "0 4px 12px rgba(110,73,182,0.25)",
-                    }}
+                    className={`flex-1 inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-[13.5px] font-semibold text-white transition disabled:opacity-60 bg-[image:linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))] ${
+                      inviting ? "shadow-none" : "shadow-[0_4px_12px_rgba(110,73,182,0.25)]"
+                    }`}
                   >
                     {inviting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
                     {inviting ? "Adding..." : "Add Member"}
