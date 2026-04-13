@@ -2,34 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-import Navbar        from "@/shared/Navbar";
-import Sidebar       from "@/shared/Sidebar";
-import QuickActions  from "@/components/dashboard/QuickActions";
+import Navbar from "@/shared/Navbar";
+import Sidebar from "@/shared/Sidebar";
+import QuickActions from "@/components/dashboard/QuickActions";
 import RecentMessages from "@/components/dashboard/RecentMessages";
-import ActivityFeed  from "@/components/dashboard/ActivityFeed";
-import StatsRow      from "@/components/dashboard/StatsRow";
+import ActivityFeed from "@/components/dashboard/ActivityFeed";
+import StatsRow from "@/components/dashboard/StatsRow";
+import PageRenderer from "@/shared/PageRenderer";
 import { authApi, type AuthUser } from "@/utils/api";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  const [active, setActive]       = useState("dashboard");
-  const [user, setUser]           = useState<AuthUser | null>(null);
+  const [active, setActive] = useState("dashboard");
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+
+  const handleStartMeeting = () => {
+    const generatedId = crypto.randomUUID();
+    router.push(`/authenticated/meeting?meetingId=${generatedId}`);
+  };
 
   useEffect(() => {
     const hydrateUser = async () => {
       try {
         const cachedUser = localStorage.getItem("userDetails");
-        if (cachedUser) {
-          setUser(JSON.parse(cachedUser) as AuthUser);
-        }
+        if (cachedUser) setUser(JSON.parse(cachedUser) as AuthUser);
 
         const response = await authApi.getMe();
-        if (response.data?.user) {
-          setUser(response.data.user);
-        }
+        if (response.data?.user) setUser(response.data.user);
       } catch {
         // Keep cached values if /me fails
       } finally {
@@ -45,6 +48,7 @@ export default function DashboardPage() {
 
   return (
     <div className="db-root">
+
       <Navbar
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
@@ -53,6 +57,7 @@ export default function DashboardPage() {
       />
 
       <div className="db-body">
+
         <Sidebar
           collapsed={collapsed}
           active={active}
@@ -66,6 +71,7 @@ export default function DashboardPage() {
         />
 
         <main className="db-main">
+
           <div>
             <h1 className="db-welcome-title">Welcome Back, {userName}.</h1>
             <p className="db-welcome-sub">
@@ -79,10 +85,14 @@ export default function DashboardPage() {
           <StatsRow />
 
           <div className="db-content-grid">
+            
             <QuickActions />
             <RecentMessages />
             <ActivityFeed />
           </div>
+
+          
+
         </main>
       </div>
     </div>
