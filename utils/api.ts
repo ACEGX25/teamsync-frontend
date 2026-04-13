@@ -1,7 +1,8 @@
 // utils/api.ts
 import Cookies from 'js-cookie'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const DEFAULT_HTTPS_API_BASE = "https://192.168.21.35:4000/api";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_HTTPS_API_BASE;
 
 interface ApiResponse<T> {
   success: boolean;
@@ -27,10 +28,20 @@ interface MeResponseData {
   user: AuthUser;
 }
 
+interface MeetingResponseData {
+  meetingId: string;
+  meetingLink: string;
+  hostUserId: number;
+  sourceType: "channel" | "dm";
+  sourceId: number;
+  startedAt: string;
+  isActive: boolean;
+  participantCount: number;
+}
+
 export interface Organization {
-  orgId(orgId: (arg0: string, orgId: any) => unknown): unknown;
-  orgId(arg0: string, orgId: any): unknown;
-  id: number;
+  orgId: number;
+  id?: number;
   orgName: string;
   memberCount?: number;
   createdAt?: string;
@@ -50,6 +61,12 @@ export interface OrgMember {
   };
 }
 
+export interface Conversation {
+  conversationId: number;
+  type?: string;
+  createdAt?: string; 
+}
+
 const persistUserSession = (payload?: LoginResponseData) => {
   if (typeof window === "undefined" || !payload) return;
   // existing localStorage
@@ -60,7 +77,6 @@ const persistUserSession = (payload?: LoginResponseData) => {
   // add cookie so middleware can read it
   Cookies.set("token", payload.accessToken, { expires: 7 })
 };
-
 
 const getAuthHeaders = () => {
   const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
@@ -179,6 +195,33 @@ export const orgApi = {
   },
 };
 
+export const meetingApi = {
+  createMeeting: async (sourceType: "channel" | "dm", sourceId: number): Promise<MeetingResponseData> => {
+    const response = await apiFetch(`${API_BASE_URL}/meetings`, {
+      method: "POST",
+      body: JSON.stringify({ sourceType, sourceId }),
+    });
+
+    const data: ApiResponse<MeetingResponseData> = await response.json();
+    if (!response.ok || !data.success || !data.data) {
+      throw new Error(data.message || "Failed to create meeting");
+    }
+
+    return data.data;
+  },
+};
+
+export const conversationApi = {
+  getMyConversations: async (): Promise<Conversation[]> => {
+    const response = await apiFetch(`${API_BASE_URL}/conversations`);
+    const data = await response.json();
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || "Failed to fetch conversations");
+    }
+    return data?.data?.conversations ?? [];
+  },
+};
+
 
 
 const refreshAccessToken = async (): Promise<string | null> => {
@@ -216,7 +259,8 @@ export const apiFetch = async (url: string, options: RequestInit = {}): Promise<
       if (typeof window !== "undefined") {
         localStorage.clear();
         Cookies.remove("token");
-        window.location.href = "/login";
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        window.location.href = `/auth/login?next=${encodeURIComponent(returnTo)}`;
       }
       return response;
     }

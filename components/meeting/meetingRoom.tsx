@@ -1,6 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { io, type Socket } from "socket.io-client";
+import {
+    AlertTriangle,
+    Bell,
+    Check,
+    Copy,
+    MessageCircle,
+    Mic,
+    MicOff,
+    Monitor,
+    PhoneOff,
+    Send,
+    Settings,
+    Users,
+    X,
+} from "lucide-react";
 
 export interface Participant {
     id: string;
@@ -24,17 +40,54 @@ export interface ChatMessage {
 
 interface MeetingRoomProps {
     meetingId: string;
+    accessToken: string | null;
     currentUser: {
-        id: string;
+        id: number;
         name: string;
         initials: string;
         color: string;
     };
-    wsUrl: string;
+    socketUrl: string;
     onLeave?: () => void;
 }
 
 type MeetingViewMode = "grid" | "focus";
+
+interface ServerParticipant {
+    userId: number;
+    fullName: string;
+    role: "HOST" | "PARTICIPANT";
+    isMuted: boolean;
+    isPresenter: boolean;
+    joinedAt: string | Date;
+}
+
+interface ServerChatMessage {
+    id: string;
+    senderId: number;
+    senderName: string;
+    content: string;
+    sentAt: string | Date;
+}
+
+const MEETING_EVENTS = {
+    JOIN: "meeting:join",
+    LEAVE: "meeting:leave",
+    END: "meeting:end",
+    SEND_CHAT: "meeting:chat:send",
+    TOGGLE_SELF_MUTE: "meeting:mute:self",
+    PRESENTER_ACTION: "meeting:presenter:action",
+    JOINED: "meeting:joined",
+    PARTICIPANT_JOINED: "meeting:participant:joined",
+    PARTICIPANT_LEFT: "meeting:participant:left",
+    PARTICIPANT_MUTED: "meeting:participant:muted",
+    ALL_MUTED: "meeting:all:muted",
+    CHAT_MESSAGE: "meeting:chat:message",
+    SCREEN_SHARE_STARTED: "meeting:screenshare:started",
+    SCREEN_SHARE_STOPPED: "meeting:screenshare:stopped",
+    ENDED: "meeting:ended",
+    ERROR: "meeting:error",
+} as const;
 
 function formatTime(d = new Date()) {
     const h = d.getHours() % 12 || 12;
@@ -48,6 +101,18 @@ function formatDuration(s: number) {
     const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
     const ss = String(s % 60).padStart(2, "0");
     return `${hh}:${mm}:${ss}`;
+}
+
+function toInitials(fullName: string) {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean).slice(0, 2);
+    if (!parts.length) return "TS";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+function colorFromUserId(userId: number) {
+    const palette = ["green", "amber", "red", "blue", "violet"];
+    return palette[userId % palette.length];
 }
 
 function avatarToneClass(color: string) {
@@ -120,27 +185,30 @@ function ParticipantCard({ p }: { p: Participant }) {
                 className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${p.stream ? "absolute right-3 top-3" : ""
                     } ${p.micOn ? "bg-[var(--color-meeting-mic-on-bg)] text-[var(--color-meeting-mic-on-text)]" : "bg-[var(--color-error-bg)] text-[var(--color-error)]"}`}
             >
-                {p.micOn ? "🎙" : "🔇"}
+                {p.micOn ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />}
             </span>
         </div>
     );
 }
 
-export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: MeetingRoomProps) {
+export default function MeetingRoom({ meetingId, accessToken, currentUser, socketUrl, onLeave }: MeetingRoomProps) {
+    const ASSUME_MIC_AVAILABLE_FOR_NOW = true;
+
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [chatInput, setChatInput] = useState("");
-    const [micOn, setMicOn] = useState(true);
-    const [camOn, setCamOn] = useState(false);
+    const [micOn, setMicOn] = useState(false);
     const [sharing, setSharing] = useState(false);
     const [showChat, setShowChat] = useState(true);
+    const [rightPanelMode, setRightPanelMode] = useState<"chat" | "participants">("chat");
     const [viewMode, setViewMode] = useState<MeetingViewMode>("grid");
     const [elapsed, setElapsed] = useState(0);
     const [wsStatus, setWsStatus] = useState<"connecting" | "connected" | "disconnected">("connecting");
+    const [copyState, setCopyState] = useState<"idle" | "success" | "error">("idle");
 
     const meetingTiles: Participant[] = [
         {
-            id: currentUser.id,
+            id: String(currentUser.id),
             name: `${currentUser.name} (You)`,
             initials: currentUser.initials,
             color: currentUser.color,
@@ -150,7 +218,7 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
         ...participants,
     ];
 
-    const wsRef = useRef<WebSocket | null>(null);
+    const socketRef = useRef<Socket | null>(null);
     const screenVideoRef = useRef<HTMLVideoElement>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
     const screenStreamRef = useRef<MediaStream | null>(null);
@@ -164,132 +232,175 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
         };
     }, []);
 
-    useEffect(() => {
-        const demoParticipants: Participant[] = [
-            { id: "demo-user-1", name: "Sarah Johnson", initials: "SJ", color: "green", micOn: true, speaking: false },
-            { id: "demo-user-2", name: "Mike Chen", initials: "MC", color: "amber", micOn: true, speaking: false },
-            { id: "demo-user-3", name: "Emma Wilson", initials: "EW", color: "red", micOn: false, speaking: false },
-            { id: "demo-user-4", name: "David Park", initials: "DP", color: "violet", micOn: true, speaking: false },
-            { id: "demo-user-5", name: "Lisa Martinez", initials: "LM", color: "blue", micOn: true, speaking: false },
-            { id: "demo-user-6", name: "James Taylor", initials: "JT", color: "blue", micOn: false, speaking: false },
-        ];
-        setParticipants(demoParticipants);
-    }, []);
-
-    const handleServerMessage = useCallback(
-        (msg: Record<string, unknown>) => {
-            switch (msg.type) {
-                case "participant_joined": {
-                    const p = msg.participant as Participant;
-                    setParticipants((prev) => (prev.find((x) => x.id === p.id) ? prev : [...prev, p]));
-                    addSystemMsg(`${p.name} joined`);
-                    break;
-                }
-                case "participant_left": {
-                    const { userId, userName } = msg as { userId: string; userName: string };
-                    setParticipants((prev) => prev.filter((p) => p.id !== userId));
-                    addSystemMsg(`${userName} left`);
-                    break;
-                }
-                case "chat_message": {
-                    const { fromId, from, text, time } = msg as {
-                        fromId: string;
-                        from: string;
-                        text: string;
-                        time: string;
-                    };
-                    setMessages((prev) => [
-                        ...prev,
-                        {
-                            id: crypto.randomUUID(),
-                            type: "message",
-                            from,
-                            fromId,
-                            text,
-                            time,
-                            isSelf: fromId === currentUser.id,
-                        },
-                    ]);
-                    break;
-                }
-                case "speaking": {
-                    const { userId, active } = msg as { userId: string; active: boolean };
-                    setParticipants((prev) => prev.map((p) => (p.id === userId ? { ...p, speaking: active } : p)));
-                    break;
-                }
-                case "participants_list": {
-                    const list = msg.participants as Participant[];
-                    setParticipants(list.filter((p) => p.id !== currentUser.id));
-                    break;
-                }
-                case "chat_history": {
-                    const history = msg.messages as ChatMessage[];
-                    setMessages(history);
-                    break;
-                }
-                default:
-                    break;
-            }
-        },
-        [currentUser.id]
-    );
+    const addSystemMsg = (text: string) => {
+        setMessages((prev) => [...prev, { id: crypto.randomUUID(), type: "system", text, time: formatTime() }]);
+    };
 
     useEffect(() => {
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
+        if (!accessToken) {
+            return;
+        }
 
-        ws.onopen = () => {
+        const socket = io(socketUrl, {
+            withCredentials: true,
+            transports: ["websocket"],
+        });
+        socketRef.current = socket;
+
+        const mapParticipant = (p: ServerParticipant): Participant => {
+            const isSelf = p.userId === currentUser.id;
+            return {
+                id: String(p.userId),
+                name: isSelf ? `${p.fullName} (You)` : p.fullName,
+                initials: isSelf ? currentUser.initials : toInitials(p.fullName),
+                color: isSelf ? currentUser.color : colorFromUserId(p.userId),
+                micOn: !p.isMuted,
+                speaking: false,
+            };
+        };
+
+        socket.on("connect", () => {
             setWsStatus("connected");
-            ws.send(JSON.stringify({ type: "join", meetingId, user: currentUser }));
-        };
+            socket.emit(MEETING_EVENTS.JOIN, { meetingId, token: accessToken });
+        });
 
-        ws.onmessage = (event) => {
-            try {
-                const msg = JSON.parse(event.data as string);
-                handleServerMessage(msg);
-            } catch {
-                console.error("WS parse error", event.data);
+        socket.on("disconnect", () => setWsStatus("disconnected"));
+        socket.on("connect_error", () => setWsStatus("disconnected"));
+
+        socket.on(MEETING_EVENTS.ERROR, (payload: { message: string }) => {
+            addSystemMsg(payload.message);
+        });
+
+        socket.on(MEETING_EVENTS.JOINED, (payload: {
+            you: ServerParticipant;
+            participants: ServerParticipant[];
+            chatHistory: ServerChatMessage[];
+        }) => {
+            setMicOn(!payload.you.isMuted);
+            setParticipants(payload.participants.filter((p) => p.userId !== currentUser.id).map(mapParticipant));
+            setMessages(
+                payload.chatHistory.map((msg) => ({
+                    id: msg.id,
+                    type: "message",
+                    from: msg.senderName,
+                    fromId: String(msg.senderId),
+                    text: msg.content,
+                    time: formatTime(new Date(msg.sentAt)),
+                    isSelf: msg.senderId === currentUser.id,
+                }))
+            );
+        });
+
+        socket.on(MEETING_EVENTS.PARTICIPANT_JOINED, (payload: { participant: ServerParticipant }) => {
+            const mapped = mapParticipant(payload.participant);
+            setParticipants((prev) => (prev.find((x) => x.id === mapped.id) ? prev : [...prev, mapped]));
+            addSystemMsg(`${payload.participant.fullName} joined`);
+        });
+
+        socket.on(MEETING_EVENTS.PARTICIPANT_LEFT, (payload: { userId: number; fullName: string }) => {
+            const id = String(payload.userId);
+            setParticipants((prev) => prev.filter((p) => p.id !== id));
+            addSystemMsg(`${payload.fullName} left`);
+        });
+
+        socket.on(MEETING_EVENTS.CHAT_MESSAGE, (payload: { message: ServerChatMessage }) => {
+            const msg = payload.message;
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: msg.id,
+                    type: "message",
+                    from: msg.senderName,
+                    fromId: String(msg.senderId),
+                    text: msg.content,
+                    time: formatTime(new Date(msg.sentAt)),
+                    isSelf: msg.senderId === currentUser.id,
+                },
+            ]);
+        });
+
+        socket.on(MEETING_EVENTS.PARTICIPANT_MUTED, (payload: { userId: number; isMuted: boolean }) => {
+            const id = String(payload.userId);
+            setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, micOn: !payload.isMuted } : p)));
+            if (payload.userId === currentUser.id) {
+                setMicOn(!payload.isMuted);
             }
+        });
+
+        socket.on(MEETING_EVENTS.ALL_MUTED, (payload: { mutedUserIds: number[] }) => {
+            const mutedSet = new Set(payload.mutedUserIds.map(String));
+            setParticipants((prev) => prev.map((p) => (mutedSet.has(p.id) ? { ...p, micOn: false } : p)));
+            if (mutedSet.has(String(currentUser.id))) {
+                setMicOn(false);
+            }
+        });
+
+        socket.on(MEETING_EVENTS.SCREEN_SHARE_STARTED, (payload: { screenShareUserName?: string }) => {
+            addSystemMsg(`${payload.screenShareUserName ?? "Someone"} started sharing screen`);
+        });
+
+        socket.on(MEETING_EVENTS.SCREEN_SHARE_STOPPED, () => {
+            addSystemMsg("Screen sharing stopped");
+        });
+
+        socket.on(MEETING_EVENTS.ENDED, () => {
+            addSystemMsg("Meeting ended.");
+            onLeave?.();
+        });
+
+        return () => {
+            socket.emit(MEETING_EVENTS.LEAVE);
+            socket.disconnect();
         };
-
-        ws.onerror = () => setWsStatus("disconnected");
-        ws.onclose = () => setWsStatus("disconnected");
-
-        return () => ws.close();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [wsUrl, meetingId]);
+    }, [accessToken, currentUser.color, currentUser.id, currentUser.initials, meetingId, onLeave, socketUrl]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    function addSystemMsg(text: string) {
-        setMessages((prev) => [...prev, { id: crypto.randomUUID(), type: "system", text, time: formatTime() }]);
-    }
-
-    function wsSend(data: object) {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify(data));
+    function emitSocket(event: string, payload?: object) {
+        if (socketRef.current?.connected) {
+            socketRef.current.emit(event, payload);
         }
     }
 
     async function toggleMic() {
+        // Muting should not request permissions; only disable existing tracks.
+        if (micOn) {
+            localStreamRef.current?.getAudioTracks().forEach((t) => (t.enabled = false));
+            setMicOn(false);
+            emitSocket(MEETING_EVENTS.TOGGLE_SELF_MUTE);
+            return;
+        }
+
         if (!localStreamRef.current) {
             try {
                 localStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch {
-                alert("Microphone access denied.");
+            } catch (error) {
+                if (ASSUME_MIC_AVAILABLE_FOR_NOW) {
+                    setMicOn(true);
+                    emitSocket(MEETING_EVENTS.TOGGLE_SELF_MUTE);
+                    addSystemMsg("Microphone running in demo mode (no real audio input).");
+                    return;
+                }
+
+                const err = error as DOMException;
+                if (err.name === "NotAllowedError") {
+                    alert("Microphone permission is blocked. Allow microphone access in your browser site settings.");
+                } else if (err.name === "NotFoundError") {
+                    alert("No microphone was found. Please connect a microphone and try again.");
+                } else if (err.name === "NotReadableError") {
+                    alert("Your microphone is busy in another app. Close that app and try again.");
+                } else {
+                    alert("Unable to access microphone. Please check browser and system permissions.");
+                }
                 return;
             }
         }
-        const enabled = !micOn;
-        localStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = enabled));
-        setMicOn(enabled);
-        wsSend({ type: "mic_toggle", userId: currentUser.id, micOn: enabled });
-    }
 
-    async function toggleCam() {
-        setCamOn((v) => !v);
+        localStreamRef.current.getAudioTracks().forEach((t) => (t.enabled = true));
+        setMicOn(true);
+        emitSocket(MEETING_EVENTS.TOGGLE_SELF_MUTE);
     }
 
     async function toggleShare() {
@@ -298,7 +409,7 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
             screenStreamRef.current = null;
             if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
             setSharing(false);
-            wsSend({ type: "screen_share_stopped", userId: currentUser.id });
+            emitSocket(MEETING_EVENTS.PRESENTER_ACTION, { meetingId, action: "stop" });
             return;
         }
 
@@ -315,11 +426,11 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
                 setSharing(false);
                 screenStreamRef.current = null;
                 if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
-                wsSend({ type: "screen_share_stopped", userId: currentUser.id });
+                emitSocket(MEETING_EVENTS.PRESENTER_ACTION, { meetingId, action: "stop" });
             };
 
             setSharing(true);
-            wsSend({ type: "screen_share_started", userId: currentUser.id, userName: currentUser.name });
+            emitSocket(MEETING_EVENTS.PRESENTER_ACTION, { meetingId, action: "start" });
         } catch (err) {
             console.warn("Screen share cancelled", err);
         }
@@ -328,22 +439,7 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
     function sendMessage() {
         const text = chatInput.trim();
         if (!text) return;
-        const time = formatTime();
-
-        setMessages((prev) => [
-            ...prev,
-            {
-                id: crypto.randomUUID(),
-                type: "message",
-                from: currentUser.name,
-                fromId: currentUser.id,
-                text,
-                time,
-                isSelf: true,
-            },
-        ]);
-
-        wsSend({ type: "chat_message", from: currentUser.name, fromId: currentUser.id, text, time });
+        emitSocket(MEETING_EVENTS.SEND_CHAT, { meetingId, content: text });
         setChatInput("");
     }
 
@@ -356,11 +452,41 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
 
     function endMeeting() {
         if (confirm("End the meeting for everyone?")) {
-            wsSend({ type: "end_meeting", userId: currentUser.id });
+            emitSocket(MEETING_EVENTS.END);
             screenStreamRef.current?.getTracks().forEach((t) => t.stop());
             localStreamRef.current?.getTracks().forEach((t) => t.stop());
             onLeave?.();
         }
+    }
+
+    async function copyMeetingLink() {
+        const meetingLink = `${window.location.origin}/meeting/${meetingId}`;
+
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(meetingLink);
+            } else {
+                const textarea = document.createElement("textarea");
+                textarea.value = meetingLink;
+                textarea.style.position = "fixed";
+                textarea.style.opacity = "0";
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                const copied = document.execCommand("copy");
+                document.body.removeChild(textarea);
+
+                if (!copied) {
+                    throw new Error("Copy command was not successful.");
+                }
+            }
+
+            setCopyState("success");
+        } catch {
+            setCopyState("error");
+        }
+
+        window.setTimeout(() => setCopyState("idle"), 2200);
     }
 
     return (
@@ -402,14 +528,29 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
                         <span>{formatDuration(elapsed)}</span>
                     </div>
 
+                    <button
+                        type="button"
+                        onClick={copyMeetingLink}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${copyState === "success"
+                                ? "border-[var(--color-success)] bg-[var(--color-success-bg)] text-[var(--color-success)]"
+                                : copyState === "error"
+                                    ? "border-[var(--color-error)] bg-[var(--color-error-bg)] text-[var(--color-error)]"
+                                    : "border-[var(--color-landing-input-border)] bg-[var(--color-landing-input-bg)] text-[var(--color-text-secondary)]"
+                            }`}
+                        title="Copy meeting link"
+                    >
+                        {copyState === "success" ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copyState === "success" ? "Copied" : copyState === "error" ? "Retry" : "Copy Link"}
+                    </button>
+
                     {wsStatus === "disconnected" && (
                         <span className="rounded-md bg-[var(--color-status-warn-bg)] px-2 py-[3px] text-[11px] font-semibold text-[var(--color-warn)]">
-                            ⚠ Reconnecting...
+                            <span className="inline-flex items-center gap-1">
+                                <AlertTriangle className="h-3.5 w-3.5" />
+                                Reconnecting...
+                            </span>
                         </span>
                     )}
-
-                    <div className="grid h-8 w-8 place-items-center rounded-full border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[15px]">🔔</div>
-                    <div className="grid h-8 w-8 place-items-center rounded-full border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[15px]">⚙</div>
                     <Avatar initials={currentUser.initials} color={currentUser.color} size={32} />
                 </div>
             </nav>
@@ -449,7 +590,7 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
                                 <video ref={screenVideoRef} autoPlay muted className="h-full w-full bg-black object-cover" />
                             ) : (
                                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed border-[var(--color-landing-input-border)] p-6 text-center text-[var(--color-text-secondary)]">
-                                    <div className="text-[34px] leading-none">🖥</div>
+                                    <Monitor className="h-9 w-9" />
                                     <span>No screen being shared</span>
                                     <span className="text-xs text-[var(--color-text-faint)]">Click &quot;Share Screen&quot; below to present</span>
                                 </div>
@@ -464,15 +605,6 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
                             </div>
                         </div>
                     )}
-
-                    <div className="flex h-[138px] shrink-0 items-center gap-3 overflow-x-auto border-t border-[var(--color-divider)] bg-[var(--color-surface)] px-3.5 py-3">
-                        {participants.length === 0 ? (
-                            <span className="w-full text-center text-xs text-[var(--color-text-faint)]">Waiting for others to join...</span>
-                        ) : (
-                            participants.map((p) => <ParticipantCard key={p.id} p={p} />)
-                        )}
-                    </div>
-
                     <div className="flex flex-wrap justify-center gap-2.5 border-t border-[var(--color-divider)] bg-[var(--color-surface)] px-[18px] pb-[18px] pt-[14px] shadow-[0_-8px_24px_rgba(100,80,160,0.03)]">
                         <button
                             type="button"
@@ -482,22 +614,9 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
                                     : "border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[var(--color-text-primary)]"
                                 }`}
                         >
-                            <span>{micOn ? "🎙" : "🔇"}</span>
+                            {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                             {micOn ? "Mute" : "Unmute"}
                         </button>
-
-                        <button
-                            type="button"
-                            onClick={toggleCam}
-                            className={`inline-flex items-center gap-2 rounded-[14px] border px-[14px] py-2.5 text-[13px] font-semibold ${camOn
-                                    ? "border-[var(--color-brand-light)] bg-[var(--color-brand-xsubtle)] text-[var(--color-brand-deep)]"
-                                    : "border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[var(--color-text-primary)]"
-                                }`}
-                        >
-                            <span>📷</span>
-                            {camOn ? "Stop Camera" : "Camera"}
-                        </button>
-
                         <button
                             type="button"
                             onClick={toggleShare}
@@ -506,35 +625,34 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
                                     : "border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[var(--color-text-primary)]"
                                 }`}
                         >
-                            <span>🖥</span>
+                            <Monitor className="h-4 w-4" />
                             {sharing ? "Stop Sharing" : "Share Screen"}
                         </button>
 
                         <button
                             type="button"
-                            onClick={() => setShowChat((v) => !v)}
-                            className={`inline-flex items-center gap-2 rounded-[14px] border px-[14px] py-2.5 text-[13px] font-semibold ${showChat
+                            onClick={() => {
+                                if (showChat && rightPanelMode === "chat") {
+                                    setShowChat(false);
+                                } else {
+                                    setShowChat(true);
+                                    setRightPanelMode("chat");
+                                }
+                            }}
+                            className={`inline-flex items-center gap-2 rounded-[14px] border px-[14px] py-2.5 text-[13px] font-semibold ${showChat && rightPanelMode === "chat"
                                     ? "border-[var(--color-brand-light)] bg-[var(--color-brand-xsubtle)] text-[var(--color-brand-deep)]"
                                     : "border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[var(--color-text-primary)]"
                                 }`}
                         >
-                            <span>💬</span>
+                            <MessageCircle className="h-4 w-4" />
                             Chat
                         </button>
-
-                        <button
-                            type="button"
-                            className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] px-[14px] py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)]"
-                        >
-                            <span>...</span>
-                        </button>
-
                         <button
                             type="button"
                             onClick={endMeeting}
                             className="inline-flex items-center gap-2 rounded-[14px] border border-[var(--color-error)] bg-[var(--color-error-bg)] px-[14px] py-2.5 text-[13px] font-semibold text-[var(--color-error)]"
                         >
-                            📞 End Meeting
+                            <PhoneOff className="h-4 w-4" /> End Meeting
                         </button>
                     </div>
                 </div>
@@ -542,69 +660,125 @@ export default function MeetingRoom({ meetingId, currentUser, wsUrl, onLeave }: 
                 {showChat && (
                     <aside className="flex w-[380px] min-w-[320px] max-w-[440px] shrink-0 flex-col border-l border-[var(--color-divider)] bg-[var(--color-surface)] shadow-[-12px_0_24px_rgba(100,80,160,0.03)]">
                         <div className="flex h-[58px] items-center justify-between gap-3 border-b border-[var(--color-divider)] px-4">
-                            <h3 className="m-0 text-sm font-bold">Live Chat</h3>
+                            <h3 className="m-0 text-sm font-bold">{rightPanelMode === "chat" ? "Live Chat" : "Participants"}</h3>
 
                             <div className="flex items-center gap-2">
-                                <div className="grid h-[26px] w-[26px] place-items-center rounded-full border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[13px]">
-                                    👥
-                                </div>
-                                <div
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowChat(true);
+                                        setRightPanelMode("chat");
+                                    }}
+                                    className="grid h-[26px] w-[26px] place-items-center rounded-full border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[13px]"
+                                    title="Show chat panel"
+                                >
+                                    <MessageCircle className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowChat(true);
+                                        setRightPanelMode("participants");
+                                    }}
+                                    className="grid h-[26px] w-[26px] place-items-center rounded-full border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[13px]"
+                                    title="Show participants panel"
+                                >
+                                    <Users className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                    type="button"
                                     onClick={() => setShowChat(false)}
                                     className="grid h-[26px] w-[26px] cursor-pointer place-items-center rounded-full border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[13px]"
                                 >
-                                    ✕
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-[var(--gradient-meeting-chat)] p-[14px]">
-                            {messages.map((m) =>
-                                m.type === "system" ? (
-                                    <div
-                                        key={m.id}
-                                        className="self-center rounded-full border border-[var(--color-divider)] bg-[var(--color-landing-input-bg)] px-2.5 py-1 text-[11px] text-[var(--color-text-faint)]"
-                                    >
-                                        {m.text}
-                                    </div>
-                                ) : (
-                                    <div key={m.id} className={`flex max-w-[92%] flex-col gap-1 ${m.isSelf ? "self-end" : "self-start"}`}>
-                                        <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-faint)]">
-                                            <span className="font-bold text-[var(--color-text-primary)]">{m.from}</span>
-                                            {m.isSelf && (
-                                                <span className="rounded-full bg-[var(--color-brand-xsubtle)] px-1.5 py-[2px] text-[10px] font-bold text-[var(--color-brand-deep)]">
-                                                    You
-                                                </span>
-                                            )}
-                                            <span>{m.time}</span>
-                                        </div>
-
-                                        <div className="break-words rounded-2xl border border-[var(--color-divider)] bg-[var(--color-landing-input-bg)] px-3 py-2.5 text-[13px] leading-[1.45] text-[var(--color-text-primary)]">
-                                            {m.text}
-                                        </div>
-                                    </div>
-                                )
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        <div className="border-t border-[var(--color-divider)] bg-[var(--color-surface)] p-[14px]">
-                            <div className="flex items-center gap-2 rounded-2xl border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] px-3 py-2">
-                                <input
-                                    value={chatInput}
-                                    onChange={(e) => setChatInput(e.target.value)}
-                                    onKeyDown={handleKey}
-                                    placeholder="Type a message..."
-                                    className="min-w-0 flex-1 bg-transparent text-[13px] text-[var(--color-text-primary)] outline-none"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={sendMessage}
-                                    className="h-[38px] w-[38px] rounded-xl border-none bg-[linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))] text-[var(--color-surface)] shadow-[var(--shadow-meeting-send)]"
-                                >
-                                    ➤
+                                    <X className="h-3.5 w-3.5" />
                                 </button>
                             </div>
                         </div>
+
+                        {rightPanelMode === "participants" ? (
+                            <div className="flex flex-1 flex-col overflow-hidden bg-[var(--gradient-meeting-chat)] p-[14px]">
+                                <div className="mb-3 flex items-center justify-between">
+                                    <p className="text-xs font-semibold text-[var(--color-text-secondary)]">All participants</p>
+                                    <span className="rounded-full bg-[var(--color-brand-xsubtle)] px-2.5 py-1 text-[11px] font-semibold text-[var(--color-brand-deep)]">
+                                        {meetingTiles.length}
+                                    </span>
+                                </div>
+
+                                <div className="flex-1 space-y-1.5 overflow-y-auto rounded-xl border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] p-2">
+                                    {meetingTiles.map((participant) => (
+                                        <div
+                                            key={`participant-list-${participant.id}`}
+                                            className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5"
+                                        >
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                <Avatar initials={participant.initials} color={participant.color} size={32} />
+                                                <span className="truncate text-xs font-medium text-[var(--color-text-primary)]">
+                                                    {participant.name}
+                                                </span>
+                                            </div>
+                                            {participant.micOn ? (
+                                                <Mic className="h-3.5 w-3.5 text-[var(--color-success)]" />
+                                            ) : (
+                                                <MicOff className="h-3.5 w-3.5 text-[var(--color-error)]" />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-[var(--gradient-meeting-chat)] p-[14px]">
+                                    {messages.map((m) =>
+                                        m.type === "system" ? (
+                                            <div
+                                                key={m.id}
+                                                className="self-center rounded-full border border-[var(--color-divider)] bg-[var(--color-landing-input-bg)] px-2.5 py-1 text-[11px] text-[var(--color-text-faint)]"
+                                            >
+                                                {m.text}
+                                            </div>
+                                        ) : (
+                                            <div key={m.id} className={`flex max-w-[92%] flex-col gap-1 ${m.isSelf ? "self-end" : "self-start"}`}>
+                                                <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-faint)]">
+                                                    <span className="font-bold text-[var(--color-text-primary)]">{m.from}</span>
+                                                    {m.isSelf && (
+                                                        <span className="rounded-full bg-[var(--color-brand-xsubtle)] px-1.5 py-[2px] text-[10px] font-bold text-[var(--color-brand-deep)]">
+                                                            You
+                                                        </span>
+                                                    )}
+                                                    <span>{m.time}</span>
+                                                </div>
+
+                                                <div className="break-words rounded-2xl border border-[var(--color-divider)] bg-[var(--color-landing-input-bg)] px-3 py-2.5 text-[13px] leading-[1.45] text-[var(--color-text-primary)]">
+                                                    {m.text}
+                                                </div>
+                                            </div>
+                                        )
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </div>
+
+                                <div className="border-t border-[var(--color-divider)] bg-[var(--color-surface)] p-[14px]">
+                                    <div className="flex items-center gap-2 rounded-2xl border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] px-3 py-2">
+                                        <input
+                                            value={chatInput}
+                                            onChange={(e) => setChatInput(e.target.value)}
+                                            onKeyDown={handleKey}
+                                            placeholder="Type a message..."
+                                            className="min-w-0 flex-1 bg-transparent text-[13px] text-[var(--color-text-primary)] outline-none"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={sendMessage}
+                                            className="h-[38px] w-[38px] rounded-xl border-none bg-[linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))] text-[var(--color-surface)] shadow-[var(--shadow-meeting-send)]"
+                                        >
+                                            <span className="grid place-items-center">
+                                                <Send className="h-4 w-4" />
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </aside>
                 )}
             </div>

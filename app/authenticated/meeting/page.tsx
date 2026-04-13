@@ -7,7 +7,7 @@ interface MeetingPageProps {
 }
 
 export default function MeetingPage({ searchParams }: MeetingPageProps) {
-  const meetingId = searchParams?.meetingId || crypto.randomUUID();
+  const meetingId = searchParams?.meetingId || "";
 
   return <MeetingPageClient meetingId={meetingId} />;
 }
