@@ -23,7 +23,7 @@ export const NAV_MAIN: NavItem[] = [
   { id: "activity", label: "Activity", icon: React.createElement(Activity, { size: 18 }) },
 ];
 
-// export const NAV_BOTTOM: NavItem[] = [
-//   { id: "support", label: "Support", icon: React.createElement(HelpCircle, { size: 18 }) },
-//   { id: "settings", label: "Settings", icon: React.createElement(Settings, { size: 18 }) },
-// ];
+export const NAV_BOTTOM: NavItem[] = [
+  { id: "support", label: "Support", icon: React.createElement(HelpCircle, { size: 18 }) },
+  { id: "settings", label: "Settings", icon: React.createElement(Settings, { size: 18 }) },
+];

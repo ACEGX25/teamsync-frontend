@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import Navbar        from "@/shared/Navbar";
 import Sidebar       from "@/shared/Sidebar";
@@ -11,6 +12,7 @@ import StatsRow      from "@/components/dashboard/StatsRow";
 import { authApi, type AuthUser } from "@/utils/api";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [active, setActive]       = useState("dashboard");
   const [user, setUser]           = useState<AuthUser | null>(null);
@@ -29,7 +31,7 @@ export default function DashboardPage() {
           setUser(response.data.user);
         }
       } catch {
-        // Keep cached values if /me fails (e.g., expired token).
+        // Keep cached values if /me fails
       } finally {
         setLoadingUser(false);
       }
@@ -43,7 +45,6 @@ export default function DashboardPage() {
 
   return (
     <div className="db-root">
-
       <Navbar
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
@@ -52,15 +53,19 @@ export default function DashboardPage() {
       />
 
       <div className="db-body">
-
         <Sidebar
           collapsed={collapsed}
           active={active}
-          onNavClick={setActive}
+          onNavClick={(id) => {
+            if (id === "messages") {
+              router.push("/authenticated/chat");
+            } else {
+              setActive(id);
+            }
+          }}
         />
 
         <main className="db-main">
-
           <div>
             <h1 className="db-welcome-title">Welcome Back, {userName}.</h1>
             <p className="db-welcome-sub">
@@ -74,17 +79,12 @@ export default function DashboardPage() {
           <StatsRow />
 
           <div className="db-content-grid">
-            
             <QuickActions />
             <RecentMessages />
             <ActivityFeed />
           </div>
-
-          
-
         </main>
       </div>
-
     </div>
   );
 }
