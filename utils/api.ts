@@ -184,10 +184,10 @@ export const orgApi = {
     return data ?? [];
   },
 
-  addMember: async (orgId: number, userId: string) => {
+  addMember: async (orgId: number, email: string) => {
     const response = await apiFetch(`${API_BASE_URL}/organizations/${orgId}/members`, {
       method: "POST",
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ email }),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Failed to add member");
