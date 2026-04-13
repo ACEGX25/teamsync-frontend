@@ -47,20 +47,20 @@ export default function Navbar({ collapsed, onToggleCollapse, userName, userEmai
       </div>
 
       <div className="ml-auto flex items-center gap-2.5 px-4">
-        <button
+        {/* <button
           className="inline-flex h-9 items-center gap-1.5 rounded-xl border-none bg-gradient-to-r from-[var(--color-brand)] to-[var(--color-brand-deep)] px-4 text-[13.5px] font-semibold text-[var(--color-surface)] shadow-[var(--shadow-btn)] transition hover:-translate-y-0.5 hover:opacity-95"
         >
           <Plus size={15} /> New Meeting
-        </button>
+        </button> */}
 
-        <div className="relative grid h-9 w-9 cursor-pointer place-items-center rounded-xl border border-[var(--color-input-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition hover:-translate-y-0.5 hover:border-[var(--color-brand-light)] hover:text-[var(--color-brand-deep)]">
+        {/* <div className="relative grid h-9 w-9 cursor-pointer place-items-center rounded-xl border border-[var(--color-input-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition hover:-translate-y-0.5 hover:border-[var(--color-brand-light)] hover:text-[var(--color-brand-deep)]">
           <Bell size={18} />
           <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border-2 border-[var(--color-surface)] bg-[var(--color-error)]" />
-        </div>
+        </div> */}
 
-        <div className="grid h-9 w-9 cursor-pointer place-items-center rounded-xl border border-[var(--color-input-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition hover:-translate-y-0.5 hover:border-[var(--color-brand-light)] hover:text-[var(--color-brand-deep)]">
+        {/* <div className="grid h-9 w-9 cursor-pointer place-items-center rounded-xl border border-[var(--color-input-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition hover:-translate-y-0.5 hover:border-[var(--color-brand-light)] hover:text-[var(--color-brand-deep)]">
           <Settings size={18} />
-        </div>
+        </div> */}
 
         <div className="relative">
           <div

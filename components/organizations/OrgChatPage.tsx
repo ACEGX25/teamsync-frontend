@@ -1,11 +1,65 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, UserPlus, X, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, UserPlus, X, Loader2 , Plus } from "lucide-react";
 import OrgChatMessages from "./OrgChatMessages";
 import OrgChatInput from "./OrgChatInput";
 import OrgChatMembersPanel from "./OrgChatMembersPanel";
-import { orgApi, type OrgMember } from "@/utils/api";
+import { meetingApi, orgApi, type OrgMember } from "@/utils/api";
+
+const MEETING_EVENTS_STORAGE_KEY = "orgChatMeetingEvents";
+
+type MeetingTimelineEventType = "started" | "ended";
+
+interface MeetingTimelineEvent {
+  id: string;
+  meetingId: string;
+  orgId: number;
+  type: MeetingTimelineEventType;
+  timestamp: string;
+}
+
+function readMeetingTimelineEvents(): MeetingTimelineEvent[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const raw = localStorage.getItem(MEETING_EVENTS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as MeetingTimelineEvent[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function upsertMeetingTimelineEvent(event: MeetingTimelineEvent) {
+  if (typeof window === "undefined") return;
+
+  const existing = readMeetingTimelineEvents();
+  const deduped = existing.filter((item) => item.id !== event.id);
+  deduped.push(event);
+  localStorage.setItem(MEETING_EVENTS_STORAGE_KEY, JSON.stringify(deduped));
+}
+
+function toTimelineMessage(event: MeetingTimelineEvent): ChatMessage {
+  const stamp = new Date(event.timestamp);
+  const messageLabel = event.type === "started" ? "Meeting started" : "Meeting ended";
+
+  return {
+    id: `meeting-timeline-${event.id}`,
+    senderId: "system",
+    senderName: "TeamSync",
+    senderInitials: "TS",
+    content: `${messageLabel} at ${stamp.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })}`,
+    timestamp: stamp,
+  };
+}
+
 
 interface Props {
   orgId: number;
@@ -27,6 +81,7 @@ export interface ChatMessage {
 const CURRENT_USER = { id: "me", name: "You", initials: "ME" };
 
 export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [topOffset, setTopOffset] = useState(0);
 
@@ -57,6 +112,7 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [inviteSuccess, setInviteSuccess] = useState("");
+  const [startingMeeting, setStartingMeeting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchMembers = async () => {
@@ -72,6 +128,23 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
 
   useEffect(() => {
     fetchMembers();
+  }, [orgId]);
+
+  useEffect(() => {
+    const timelineMessages = readMeetingTimelineEvents()
+      .filter((event) => event.orgId === orgId)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+      .map(toTimelineMessage);
+
+    if (!timelineMessages.length) return;
+
+    setMessages((prev) => {
+      const known = new Set(prev.map((msg) => msg.id));
+      const additions = timelineMessages.filter((msg) => !known.has(msg.id));
+      if (!additions.length) return prev;
+
+      return [...prev, ...additions].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    });
   }, [orgId]);
 
   useEffect(() => {
@@ -116,6 +189,30 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
       setInviteError(err?.message || "Failed to add member. Check the email/ID and try again.");
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleStartMeeting = async () => {
+    if (startingMeeting) return;
+
+    try {
+      setStartingMeeting(true);
+      const meeting = await meetingApi.createMeeting("channel", orgId);
+
+      upsertMeetingTimelineEvent({
+        id: `started:${meeting.meetingId}`,
+        meetingId: meeting.meetingId,
+        orgId,
+        type: "started",
+        timestamp: meeting.startedAt || new Date().toISOString(),
+      });
+
+      router.push(`/meeting/${meeting.meetingId}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unable to start meeting right now.";
+      alert(message);
+    } finally {
+      setStartingMeeting(false);
     }
   };
 
@@ -178,6 +275,14 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
                 <UserPlus size={15} />
                 Add Members
               </button>
+
+              <button
+          onClick={handleStartMeeting}
+          disabled={startingMeeting}
+          className="inline-flex h-9 items-center gap-1.5 rounded-xl border-none bg-gradient-to-r from-[var(--color-brand)] to-[var(--color-brand-deep)] px-4 text-[13.5px] font-semibold text-[var(--color-surface)] shadow-[var(--shadow-btn)] transition hover:-translate-y-0.5 hover:opacity-95"
+        >
+          <Plus size={15} /> {startingMeeting ? "Starting..." : "New Meeting"}
+        </button>
             </header>
 
             {/* Messages */}
