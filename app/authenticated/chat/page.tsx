@@ -37,14 +37,17 @@ export default function ChatPage() {
   const activeToken = token || "missing-token";
 
   return (
-    <div className="db-root">
+    <div className="relative flex h-screen w-full min-w-0 flex-col overflow-hidden bg-[linear-gradient(135deg,var(--color-bg-page-start)_0%,var(--color-bg-page-mid)_42%,var(--color-bg-page-end)_100%)] font-[var(--font-base)] text-[var(--color-text-primary)]">
+      <div className="pointer-events-none absolute left-[-10rem] top-[-8rem] h-[26rem] w-[26rem] rounded-full bg-[var(--gradient-db-glow-left)] blur-3xl" />
+      <div className="pointer-events-none absolute bottom-[-8rem] right-[-8rem] h-[28rem] w-[28rem] rounded-full bg-[var(--gradient-db-glow-right)] blur-3xl" />
+
       <Navbar
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((c) => !c)}
         userName={userName}
         userEmail={userEmail}
       />
-      <div className="db-body">
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <Sidebar
           collapsed={collapsed}
           active="messages"
@@ -54,8 +57,8 @@ export default function ChatPage() {
             }
           }}
         />
-        <main className="db-main" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ height: "100%", width: "100%" }}>
+        <main className="relative flex-1 overflow-hidden sm:p-2 flex flex-col">
+          <div className="flex-1 flex w-full flex-col overflow-hidden rounded-[24px] border border-[var(--color-divider)] bg-[var(--color-db-surface-glass)] p-0 shadow-[var(--shadow-db-hero)] backdrop-blur-[2px]">
             <ChatProvider
               accessToken={activeToken}
               currentUser={user || { userId: 0, email: "", fullName: "" } as any}

@@ -16,7 +16,8 @@ export interface NavItem {
 export const NAV_MAIN: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
 
-export const NAV_BOTTOM: NavItem[] = [
-  { id: "support", label: "Support", icon: React.createElement(HelpCircle, { size: 18 }) },
-  { id: "settings", label: "Settings", icon: React.createElement(Settings, { size: 18 }) },
+  { id: "organizations", label: "Organizations", icon: BarChart2 },
+    { id: "messages", label: "Messages", icon: MessageSquare },
+  { id: "schedule", label: "Schedule", icon: Calendar },
+  { id: "activity", label: "Activity", icon: Activity },
 ];

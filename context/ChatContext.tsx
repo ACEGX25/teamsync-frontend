@@ -146,12 +146,28 @@ export function ChatProvider({
     []
   );
 
-  // ── Load my user profile from chat service ────────────────────────────────────
+  // ── Load my user profile and DMs from chat service ──────────────────────────
 
   useEffect(() => {
+    // Load my user profile
     apiFetch<ChatUser>('/users/me')
       .then((u) => setMyUser(u))
       .catch(console.warn);
+
+    // Load DM conversations history
+    apiFetch<DMConversation[]>('/rooms/dms')
+      .then((dms) => {
+        setDmConversations((prev) => {
+          const next = new Map(prev);
+          for (const dm of dms) {
+            if (!next.has(dm.peer.id)) {
+              next.set(dm.peer.id, dm);
+            }
+          }
+          return next;
+        });
+      })
+      .catch((e) => console.warn('Failed to load DMs:', e));
   }, [apiFetch]);
 
   // ── Socket setup ──────────────────────────────────────────────────────────────
@@ -185,15 +201,16 @@ export function ChatProvider({
       })
     );
 
-    // Incoming DM
     socket.on('dm:message', (msg: Message) => {
       const myId = String(currentUser.userId);
-      const peerId = msg.senderId === myId ? msg.toUserId! : msg.senderId;
+      const senderStr = String(msg.senderId);
+      const toStr = msg.toUserId ? String(msg.toUserId) : '';
+      const peerId = senderStr === myId ? toStr : senderStr;
 
       // If this is the active conversation, append to messages
-      if (activePeerRef.current?.id === peerId) {
+      if (String(activePeerRef.current?.id) === peerId) {
         setActiveMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
+          if (prev.some((m) => String(m.id) === String(msg.id))) return prev;
           return [...prev, msg];
         });
         // Mark read
@@ -204,7 +221,7 @@ export function ChatProvider({
       setDmConversations((prev) => {
         const next = new Map(prev);
         const existing = next.get(peerId);
-        const isActive = activePeerRef.current?.id === peerId;
+        const isActive = String(activePeerRef.current?.id) === peerId;
         next.set(peerId, {
           peer: existing?.peer ?? msg.sender,
           roomId: msg.roomId ?? existing?.roomId ?? null,

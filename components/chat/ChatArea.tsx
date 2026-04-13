@@ -57,13 +57,19 @@ export function ChatArea() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputWrapperRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   }, [activeMessages]);
 
   // Reset input when peer changes
@@ -244,6 +250,7 @@ export function ChatArea() {
 
       {/* ── Messages ── */}
       <div
+        ref={scrollContainerRef}
         style={{
           flex: 1, overflowY: 'auto', padding: '16px 24px',
           display: 'flex', flexDirection: 'column', gap: '1px',
