@@ -20,13 +20,13 @@ export default function OrgStats({ orgs, loading }: Props) {
       bg: "var(--color-db-stats-members-bg)",
       iconColor: "var(--color-db-stats-members-icon)",
     },
-    {
+   /* {
       label: "Total Members",
       value: loading ? "—" : String(totalMembers),
       icon: Users,
       bg: "var(--color-db-stats-messages-bg)",
       iconColor: "var(--color-db-stats-messages-icon)",
-    },
+    }, */
   ];
 
   return (
