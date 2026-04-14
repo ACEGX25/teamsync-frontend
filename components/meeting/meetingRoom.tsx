@@ -70,6 +70,11 @@ interface ServerChatMessage {
     sentAt: string | Date;
 }
 
+type SignalMessage =
+    | { type: "offer"; sdp: string }
+    | { type: "answer"; sdp: string }
+    | { type: "candidate"; candidate: RTCIceCandidateInit };
+
 const MEETING_EVENTS = {
     JOIN: "meeting:join",
     LEAVE: "meeting:leave",
@@ -77,12 +82,14 @@ const MEETING_EVENTS = {
     SEND_CHAT: "meeting:chat:send",
     TOGGLE_SELF_MUTE: "meeting:mute:self",
     PRESENTER_ACTION: "meeting:presenter:action",
+    WEBRTC_SIGNAL: "meeting:webrtc:signal",
     JOINED: "meeting:joined",
     PARTICIPANT_JOINED: "meeting:participant:joined",
     PARTICIPANT_LEFT: "meeting:participant:left",
     PARTICIPANT_MUTED: "meeting:participant:muted",
     ALL_MUTED: "meeting:all:muted",
     CHAT_MESSAGE: "meeting:chat:message",
+    WEBRTC_SIGNAL_RECV: "meeting:webrtc:signal:recv",
     SCREEN_SHARE_STARTED: "meeting:screenshare:started",
     SCREEN_SHARE_STOPPED: "meeting:screenshare:stopped",
     ENDED: "meeting:ended",
@@ -205,6 +212,8 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
     const [elapsed, setElapsed] = useState(0);
     const [wsStatus, setWsStatus] = useState<"connecting" | "connected" | "disconnected">("connecting");
     const [copyState, setCopyState] = useState<"idle" | "success" | "error">("idle");
+    const [focusedSharerId, setFocusedSharerId] = useState<number | null>(null);
+    const [focusedSharerName, setFocusedSharerName] = useState<string>("");
 
     const meetingTiles: Participant[] = [
         {
@@ -220,10 +229,15 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
 
     const socketRef = useRef<Socket | null>(null);
     const screenVideoRef = useRef<HTMLVideoElement>(null);
+    const focusVideoRef = useRef<HTMLVideoElement>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
     const screenStreamRef = useRef<MediaStream | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const peerConnectionsRef = useRef<Map<number, RTCPeerConnection>>(new Map());
+    const participantsRef = useRef<Participant[]>([]);
+    const sharingRef = useRef(false);
+    const focusedSharerIdRef = useRef<number | null>(null);
 
     useEffect(() => {
         timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
@@ -235,6 +249,60 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
     const addSystemMsg = (text: string) => {
         setMessages((prev) => [...prev, { id: crypto.randomUUID(), type: "system", text, time: formatTime() }]);
     };
+
+    useEffect(() => {
+        participantsRef.current = participants;
+    }, [participants]);
+
+    useEffect(() => {
+        sharingRef.current = sharing;
+    }, [sharing]);
+
+    useEffect(() => {
+        focusedSharerIdRef.current = focusedSharerId;
+    }, [focusedSharerId]);
+
+    const focusedParticipant =
+        focusedSharerId === null ? undefined : participants.find((p) => Number(p.id) === focusedSharerId);
+
+    const focusedStream =
+        focusedSharerId === currentUser.id ? screenStreamRef.current : focusedParticipant?.stream;
+
+    const focusedHasLiveVideo = Boolean(
+        focusedStream?.getVideoTracks().some((track) => track.readyState === "live")
+    );
+
+    useEffect(() => {
+        const videoEl = focusVideoRef.current;
+        if (!videoEl) return;
+
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        videoEl.srcObject = focusedStream ?? null;
+
+        if (!focusedStream) return;
+
+        const tryPlay = () => {
+            void videoEl.play().catch(() => {
+                // Browser autoplay policy may reject; user interaction can resume playback.
+            });
+        };
+
+        if (videoEl.readyState >= 1) {
+            tryPlay();
+            return;
+        }
+
+        videoEl.onloadedmetadata = () => {
+            tryPlay();
+            videoEl.onloadedmetadata = null;
+        };
+
+        videoEl.oncanplay = () => {
+            tryPlay();
+            videoEl.oncanplay = null;
+        };
+    }, [focusedStream]);
 
     useEffect(() => {
         if (!accessToken) {
@@ -295,12 +363,60 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
             const mapped = mapParticipant(payload.participant);
             setParticipants((prev) => (prev.find((x) => x.id === mapped.id) ? prev : [...prev, mapped]));
             addSystemMsg(`${payload.participant.fullName} joined`);
+
+            if (sharingRef.current && payload.participant.userId !== currentUser.id) {
+                void sendOfferToParticipant(payload.participant.userId);
+            }
         });
 
         socket.on(MEETING_EVENTS.PARTICIPANT_LEFT, (payload: { userId: number; fullName: string }) => {
             const id = String(payload.userId);
             setParticipants((prev) => prev.filter((p) => p.id !== id));
+            closePeerConnection(payload.userId);
+            if (focusedSharerIdRef.current === payload.userId) {
+                setFocusedSharerId(null);
+                setFocusedSharerName("");
+            }
             addSystemMsg(`${payload.fullName} left`);
+        });
+
+        socket.on(MEETING_EVENTS.WEBRTC_SIGNAL_RECV, (payload: { fromUserId: number; signal: SignalMessage }) => {
+            void (async () => {
+                const { fromUserId, signal } = payload;
+                const pc = getOrCreatePeerConnection(fromUserId);
+
+                if (signal.type === "offer") {
+                    await pc.setRemoteDescription(new RTCSessionDescription({
+                        type: "offer",
+                        sdp: signal.sdp,
+                    }));
+
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+
+                    if (answer.sdp) {
+                        sendWebRtcSignal(fromUserId, {
+                            type: "answer",
+                            sdp: answer.sdp,
+                        });
+                    }
+                    return;
+                }
+
+                if (signal.type === "answer") {
+                    await pc.setRemoteDescription(new RTCSessionDescription({
+                        type: "answer",
+                        sdp: signal.sdp,
+                    }));
+                    return;
+                }
+
+                if (signal.type === "candidate") {
+                    await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                }
+            })().catch(() => {
+                addSystemMsg("WebRTC signaling error.");
+            });
         });
 
         socket.on(MEETING_EVENTS.CHAT_MESSAGE, (payload: { message: ServerChatMessage }) => {
@@ -335,11 +451,24 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
             }
         });
 
-        socket.on(MEETING_EVENTS.SCREEN_SHARE_STARTED, (payload: { screenShareUserName?: string }) => {
+        socket.on(MEETING_EVENTS.SCREEN_SHARE_STARTED, (payload: { screenShareUserName?: string; screenShareUserId?: number }) => {
+            if (typeof payload.screenShareUserId === "number") {
+                setFocusedSharerId(payload.screenShareUserId);
+                setFocusedSharerName(payload.screenShareUserName ?? "");
+            }
             addSystemMsg(`${payload.screenShareUserName ?? "Someone"} started sharing screen`);
         });
 
-        socket.on(MEETING_EVENTS.SCREEN_SHARE_STOPPED, () => {
+        socket.on(MEETING_EVENTS.SCREEN_SHARE_STOPPED, (payload: { stoppedByUserId?: number }) => {
+            if (typeof payload.stoppedByUserId === "number") {
+                const id = String(payload.stoppedByUserId);
+                setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, stream: undefined } : p)));
+                closePeerConnection(payload.stoppedByUserId);
+                if (focusedSharerIdRef.current === payload.stoppedByUserId) {
+                    setFocusedSharerId(null);
+                    setFocusedSharerName("");
+                }
+            }
             addSystemMsg("Screen sharing stopped");
         });
 
@@ -351,6 +480,7 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
         return () => {
             socket.emit(MEETING_EVENTS.LEAVE);
             socket.disconnect();
+            closeAllPeerConnections();
         };
     }, [accessToken, currentUser.color, currentUser.id, currentUser.initials, meetingId, onLeave, socketUrl]);
 
@@ -361,6 +491,87 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
     function emitSocket(event: string, payload?: object) {
         if (socketRef.current?.connected) {
             socketRef.current.emit(event, payload);
+        }
+    }
+
+    function sendWebRtcSignal(targetUserId: number, signal: SignalMessage) {
+        emitSocket(MEETING_EVENTS.WEBRTC_SIGNAL, {
+            meetingId,
+            targetUserId,
+            signal,
+        });
+    }
+
+    function closePeerConnection(targetUserId: number) {
+        const pc = peerConnectionsRef.current.get(targetUserId);
+        if (!pc) return;
+
+        pc.onicecandidate = null;
+        pc.ontrack = null;
+        pc.close();
+        peerConnectionsRef.current.delete(targetUserId);
+    }
+
+    function closeAllPeerConnections() {
+        peerConnectionsRef.current.forEach((_, userId) => closePeerConnection(userId));
+    }
+
+    function getOrCreatePeerConnection(targetUserId: number): RTCPeerConnection {
+        const existing = peerConnectionsRef.current.get(targetUserId);
+        if (existing) return existing;
+
+        const pc = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        });
+
+        pc.onicecandidate = (event) => {
+            if (!event.candidate) return;
+            sendWebRtcSignal(targetUserId, {
+                type: "candidate",
+                candidate: event.candidate.toJSON(),
+            });
+        };
+
+        pc.ontrack = (event) => {
+            const [stream] = event.streams;
+            if (!stream) return;
+
+            const id = String(targetUserId);
+            setParticipants((prev) => prev.map((p) => (p.id === id ? { ...p, stream } : p)));
+        };
+
+        peerConnectionsRef.current.set(targetUserId, pc);
+        return pc;
+    }
+
+    function attachScreenTrack(pc: RTCPeerConnection, stream: MediaStream) {
+        const [videoTrack] = stream.getVideoTracks();
+        if (!videoTrack) return;
+
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (sender) {
+            void sender.replaceTrack(videoTrack);
+            return;
+        }
+
+        pc.addTrack(videoTrack, stream);
+    }
+
+    async function sendOfferToParticipant(targetUserId: number) {
+        const stream = screenStreamRef.current;
+        if (!stream) return;
+
+        const pc = getOrCreatePeerConnection(targetUserId);
+        attachScreenTrack(pc, stream);
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        if (offer.sdp) {
+            sendWebRtcSignal(targetUserId, {
+                type: "offer",
+                sdp: offer.sdp,
+            });
         }
     }
 
@@ -408,7 +619,12 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
             screenStreamRef.current?.getTracks().forEach((t) => t.stop());
             screenStreamRef.current = null;
             if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
+            closeAllPeerConnections();
             setSharing(false);
+            if (focusedSharerIdRef.current === currentUser.id) {
+                setFocusedSharerId(null);
+                setFocusedSharerName("");
+            }
             emitSocket(MEETING_EVENTS.PRESENTER_ACTION, { meetingId, action: "stop" });
             return;
         }
@@ -426,11 +642,26 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
                 setSharing(false);
                 screenStreamRef.current = null;
                 if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
+                closeAllPeerConnections();
+                if (focusedSharerIdRef.current === currentUser.id) {
+                    setFocusedSharerId(null);
+                    setFocusedSharerName("");
+                }
                 emitSocket(MEETING_EVENTS.PRESENTER_ACTION, { meetingId, action: "stop" });
             };
 
             setSharing(true);
+            setFocusedSharerId(currentUser.id);
+            setFocusedSharerName(`${currentUser.name} (You)`);
             emitSocket(MEETING_EVENTS.PRESENTER_ACTION, { meetingId, action: "start" });
+
+            const others = participantsRef.current
+                .map((p) => Number(p.id))
+                .filter((id) => !Number.isNaN(id) && id !== currentUser.id);
+
+            for (const userId of others) {
+                await sendOfferToParticipant(userId);
+            }
         } catch (err) {
             console.warn("Screen share cancelled", err);
         }
@@ -455,6 +686,7 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
             emitSocket(MEETING_EVENTS.END);
             screenStreamRef.current?.getTracks().forEach((t) => t.stop());
             localStreamRef.current?.getTracks().forEach((t) => t.stop());
+            closeAllPeerConnections();
             onLeave?.();
         }
     }
@@ -579,15 +811,32 @@ export default function MeetingRoom({ meetingId, accessToken, currentUser, socke
                         </section>
                     ) : (
                         <div className="relative flex min-h-[62vh] flex-1 items-center justify-center overflow-hidden rounded-[24px] border border-[var(--color-divider)] bg-[var(--color-landing-input-bg)] shadow-[var(--shadow-db-card)]">
-                            {sharing && (
+                            {focusedSharerId !== null && (
                                 <div className="absolute left-5 top-4 z-[2] inline-flex items-center gap-1.5 rounded-full border border-[var(--color-divider)] bg-[var(--color-surface)] px-2 py-[5px] text-[11px] font-bold text-[var(--color-brand-deep)]">
                                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
-                                    YOUR SCREEN
+                                    {focusedSharerId === currentUser.id
+                                        ? "YOUR SCREEN"
+                                        : `${focusedSharerName || focusedParticipant?.name || "Participant"} SCREEN`}
                                 </div>
                             )}
 
-                            {sharing ? (
-                                <video ref={screenVideoRef} autoPlay muted className="h-full w-full bg-black object-cover" />
+                            {focusedSharerId !== null ? (
+                                focusedHasLiveVideo ? (
+                                    <video
+                                        key={`${focusedSharerId ?? "none"}-${focusedStream?.id ?? "no-stream"}`}
+                                        ref={focusVideoRef}
+                                        autoPlay
+                                        muted
+                                        playsInline
+                                        className="h-full w-full bg-black object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed border-[var(--color-landing-input-border)] p-6 text-center text-[var(--color-text-secondary)]">
+                                        <Monitor className="h-9 w-9" />
+                                        <span>{focusedSharerName || focusedParticipant?.name || "Participant"} is sharing...</span>
+                                        <span className="text-xs text-[var(--color-text-faint)]">Waiting for stream to connect</span>
+                                    </div>
+                                )
                             ) : (
                                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed border-[var(--color-landing-input-border)] p-6 text-center text-[var(--color-text-secondary)]">
                                     <Monitor className="h-9 w-9" />

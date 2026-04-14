@@ -6,59 +6,9 @@ import { ArrowLeft, UserPlus, X, Loader2 , Plus } from "lucide-react";
 import OrgChatMessages from "./OrgChatMessages";
 import OrgChatInput from "./OrgChatInput";
 import OrgChatMembersPanel from "./OrgChatMembersPanel";
-import { meetingApi, orgApi, type OrgMember } from "@/utils/api";
+import { meetingApi, orgApi, type OrgMember, type OrgChatApiMessage } from "@/utils/api";
 
-const MEETING_EVENTS_STORAGE_KEY = "orgChatMeetingEvents";
-
-type MeetingTimelineEventType = "started" | "ended";
-
-interface MeetingTimelineEvent {
-  id: string;
-  meetingId: string;
-  orgId: number;
-  type: MeetingTimelineEventType;
-  timestamp: string;
-}
-
-function readMeetingTimelineEvents(): MeetingTimelineEvent[] {
-  if (typeof window === "undefined") return [];
-
-  try {
-    const raw = localStorage.getItem(MEETING_EVENTS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as MeetingTimelineEvent[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function upsertMeetingTimelineEvent(event: MeetingTimelineEvent) {
-  if (typeof window === "undefined") return;
-
-  const existing = readMeetingTimelineEvents();
-  const deduped = existing.filter((item) => item.id !== event.id);
-  deduped.push(event);
-  localStorage.setItem(MEETING_EVENTS_STORAGE_KEY, JSON.stringify(deduped));
-}
-
-function toTimelineMessage(event: MeetingTimelineEvent): ChatMessage {
-  const stamp = new Date(event.timestamp);
-  const messageLabel = event.type === "started" ? "Meeting started" : "Meeting ended";
-
-  return {
-    id: `meeting-timeline-${event.id}`,
-    senderId: "system",
-    senderName: "TeamSync",
-    senderInitials: "TS",
-    content: `${messageLabel} at ${stamp.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    })}`,
-    timestamp: stamp,
-  };
-}
+const MEETING_INVITE_PREFIX = "MEETING_INVITE::";
 
 
 interface Props {
@@ -78,7 +28,21 @@ export interface ChatMessage {
   reactions?: { emoji: string; count: number }[];
 }
 
-const CURRENT_USER = { id: "me", name: "You", initials: "ME" };
+const toInitials = (fullName: string): string => {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "U";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+};
+
+const mapOrgChatMessage = (message: OrgChatApiMessage): ChatMessage => ({
+  id: String(message.messageId),
+  senderId: String(message.senderId),
+  senderName: message.sender?.fullName || "Unknown User",
+  senderInitials: toInitials(message.sender?.fullName || "Unknown User"),
+  content: message.content,
+  timestamp: new Date(message.createdAt),
+});
 
 export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
   const router = useRouter();
@@ -93,17 +57,7 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
     }
   }, []);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      senderId: "alex",
-      senderName: "Alex Mercer",
-      senderInitials: "AM",
-      content: `Welcome to the ${orgName} organization chat! Use this space to collaborate with your team.`,
-      timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      reactions: [{ emoji: "👋", count: 3 }],
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const [members, setMembers] = useState<OrgMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(true);
@@ -113,6 +67,8 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
   const [inviteError, setInviteError] = useState("");
   const [inviteSuccess, setInviteSuccess] = useState("");
   const [startingMeeting, setStartingMeeting] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [currentUser, setCurrentUser] = useState({ id: "me", name: "You", initials: "ME" });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchMembers = async () => {
@@ -131,45 +87,61 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
   }, [orgId]);
 
   useEffect(() => {
-    const timelineMessages = readMeetingTimelineEvents()
-      .filter((event) => event.orgId === orgId)
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      .map(toTimelineMessage);
+    if (typeof window === "undefined") return;
 
-    if (!timelineMessages.length) return;
+    try {
+      const rawUser = localStorage.getItem("userDetails");
+      if (!rawUser) return;
 
-    setMessages((prev) => {
-      const known = new Set(prev.map((msg) => msg.id));
-      const additions = timelineMessages.filter((msg) => !known.has(msg.id));
-      if (!additions.length) return prev;
+      const parsed = JSON.parse(rawUser) as { userId?: number; fullName?: string };
+      if (!parsed?.userId || !parsed?.fullName) return;
 
-      return [...prev, ...additions].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-    });
+      setCurrentUser({
+        id: String(parsed.userId),
+        name: parsed.fullName,
+        initials: toInitials(parsed.fullName),
+      });
+    } catch {
+      // Ignore parse failures and keep fallback user.
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadChat = async () => {
+      try {
+        const chat = await orgApi.getOrgChat(orgId);
+        if (cancelled) return;
+        setMessages(chat.messages.map(mapOrgChatMessage));
+      } catch {
+      }
+    };
+
+    void loadChat();
+    const interval = window.setInterval(loadChat, 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
   }, [orgId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = (content: string, files?: File[]) => {
+  const handleSend = async (content: string, files?: File[]) => {
     if (!content.trim() && (!files || files.length === 0)) return;
-    const attachments = files?.map((f) => ({
-      name: f.name,
-      url: URL.createObjectURL(f),
-      type: f.type,
-    }));
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        senderId: CURRENT_USER.id,
-        senderName: CURRENT_USER.name,
-        senderInitials: CURRENT_USER.initials,
-        content,
-        timestamp: new Date(),
-        files: attachments,
-      },
-    ]);
+
+    try {
+      setSendingMessage(true);
+      const message = await orgApi.sendOrgChatMessage(orgId, content);
+      setMessages((prev) => [...prev, mapOrgChatMessage(message)]);
+    } catch {
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const handleInvite = async () => {
@@ -199,13 +171,13 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
       setStartingMeeting(true);
       const meeting = await meetingApi.createMeeting("channel", orgId);
 
-      upsertMeetingTimelineEvent({
-        id: `started:${meeting.meetingId}`,
+      const inviteMessage = `${MEETING_INVITE_PREFIX}${JSON.stringify({
         meetingId: meeting.meetingId,
-        orgId,
-        type: "started",
-        timestamp: meeting.startedAt || new Date().toISOString(),
-      });
+        meetingLink: meeting.meetingLink,
+        orgName,
+      })}`;
+      const createdInvite = await orgApi.sendOrgChatMessage(orgId, inviteMessage);
+      setMessages((prev) => [...prev, mapOrgChatMessage(createdInvite)]);
 
       router.push(`/meeting/${meeting.meetingId}`);
     } catch (err: unknown) {
@@ -287,12 +259,16 @@ export default function OrgChatPage({ orgId, orgName, onBack }: Props) {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto">
-              <OrgChatMessages messages={messages} currentUserId={CURRENT_USER.id} />
+              <OrgChatMessages
+                messages={messages}
+                currentUserId={currentUser.id}
+                onJoinMeeting={(meetingId) => router.push(`/meeting/${meetingId}`)}
+              />
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <OrgChatInput orgName={orgName} onSend={handleSend} />
+            <OrgChatInput orgName={orgName} onSend={(content, files) => { void handleSend(content, files); }} />
           </div>
 
           {/* ── Right sidebar ── */}

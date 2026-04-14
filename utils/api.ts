@@ -67,6 +67,24 @@ export interface Conversation {
   createdAt?: string; 
 }
 
+export interface OrgChatApiMessage {
+  messageId: number;
+  conversationId: number;
+  senderId: number;
+  content: string;
+  createdAt: string;
+  sender: {
+    userId: number;
+    fullName: string;
+    email: string;
+  };
+}
+
+export interface OrgChatData {
+  conversationId: number;
+  messages: OrgChatApiMessage[];
+}
+
 const persistUserSession = (payload?: LoginResponseData) => {
   if (typeof window === "undefined" || !payload) return;
   // existing localStorage
@@ -192,6 +210,23 @@ export const orgApi = {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Failed to add member");
     return data;
+  },
+
+  getOrgChat: async (orgId: number): Promise<OrgChatData> => {
+    const response = await apiFetch(`${API_BASE_URL}/organizations/${orgId}/chat`);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Failed to fetch organization chat");
+    return data.data;
+  },
+
+  sendOrgChatMessage: async (orgId: number, content: string): Promise<OrgChatApiMessage> => {
+    const response = await apiFetch(`${API_BASE_URL}/organizations/${orgId}/chat/messages`, {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Failed to send message");
+    return data.data;
   },
 };
 

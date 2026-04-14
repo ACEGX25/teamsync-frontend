@@ -8,9 +8,6 @@ import OrgTable from "./OrgTable";
 import OrgCreateModal from "./OrgCreateModal";
 import OrgChatPage from "./OrgChatPage";
 
-// Match this to your app's top navbar height (inspect it in DevTools if unsure)
-const NAVBAR_HEIGHT = 56;
-
 export default function OrganizationsPage() {
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,12 +70,16 @@ export default function OrganizationsPage() {
 
   // ── Chat view — no wrapper div, OrgChatPage owns its own height via calc ──
   if (activeChat) {
+    const resolvedOrgId = activeChat.orgId ?? activeChat.id;
+    if (!resolvedOrgId) {
+      return null;
+    }
+
     return (
       <OrgChatPage
-        orgId={activeChat.id}
+        orgId={resolvedOrgId}
         orgName={activeChat.orgName}
         onBack={() => setActiveChat(null)}
-        navbarHeight={NAVBAR_HEIGHT}
       />
     );
   }

@@ -6,6 +6,52 @@ import type { ChatMessage } from "./OrgChatPage";
 interface Props {
   messages: ChatMessage[];
   currentUserId: string;
+  onJoinMeeting: (meetingId: string) => void;
+}
+
+const MEETING_INVITE_PREFIX = "MEETING_INVITE::";
+const MEETING_ENDED_PREFIX = "MEETING_ENDED::";
+
+function parseMeetingInvite(content: string): { meetingId: string; meetingLink?: string; orgName?: string } | null {
+  if (!content.startsWith(MEETING_INVITE_PREFIX)) return null;
+
+  const serialized = content.slice(MEETING_INVITE_PREFIX.length);
+  try {
+    const payload = JSON.parse(serialized) as {
+      meetingId?: string;
+      meetingLink?: string;
+      orgName?: string;
+    };
+
+    if (!payload.meetingId) return null;
+    return {
+      meetingId: payload.meetingId,
+      meetingLink: payload.meetingLink,
+      orgName: payload.orgName,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function parseMeetingEnded(content: string): { meetingId: string; orgName?: string | null } | null {
+  if (!content.startsWith(MEETING_ENDED_PREFIX)) return null;
+
+  const serialized = content.slice(MEETING_ENDED_PREFIX.length);
+  try {
+    const payload = JSON.parse(serialized) as {
+      meetingId?: string;
+      orgName?: string | null;
+    };
+
+    if (!payload.meetingId) return null;
+    return {
+      meetingId: payload.meetingId,
+      orgName: payload.orgName,
+    };
+  } catch {
+    return null;
+  }
 }
 
 const AVATAR_GRADIENTS = [
@@ -46,7 +92,14 @@ function getGradient(name: string) {
   return `linear-gradient(135deg, ${start}, ${end})`;
 }
 
-export default function OrgChatMessages({ messages, currentUserId }: Props) {
+export default function OrgChatMessages({ messages, currentUserId, onJoinMeeting }: Props) {
+  const endedMeetings = new Set<string>();
+
+  for (const msg of messages) {
+    const ended = parseMeetingEnded(msg.content);
+    if (ended) endedMeetings.add(ended.meetingId);
+  }
+
   // Group messages by day
   const groups: { label: string; messages: ChatMessage[] }[] = [];
   let currentLabel = "";
@@ -89,6 +142,9 @@ export default function OrgChatMessages({ messages, currentUserId }: Props) {
           <div className="space-y-6">
             {group.messages.map((msg) => {
               const isMe = msg.senderId === currentUserId;
+              const meetingInvite = parseMeetingInvite(msg.content);
+              const meetingEnded = parseMeetingEnded(msg.content);
+              const isEndedInvite = meetingInvite ? endedMeetings.has(meetingInvite.meetingId) : false;
               return (
                 <div key={msg.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
                   {/* Avatar */}
@@ -119,7 +175,89 @@ export default function OrgChatMessages({ messages, currentUserId }: Props) {
                     </div>
 
                     {/* Bubble */}
-                    {msg.content && (
+                    {meetingInvite ? (
+                      <div
+                        className="px-4 py-3 rounded-2xl"
+                        style={
+                          isMe
+                            ? {
+                                background:
+                                  "linear-gradient(135deg, var(--color-brand, #6e49b6), var(--color-brand-deep, #4a2d8c))",
+                                color: "#fff",
+                                borderRadius: "18px 18px 4px 18px",
+                              }
+                            : {
+                                background: "var(--color-surface-container-lowest, #fff)",
+                                color: "var(--color-text-primary, #2f323d)",
+                                border: "1px solid var(--color-divider, #e0e2f0)",
+                                borderRadius: "4px 18px 18px 18px",
+                                boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                              }
+                        }
+                      >
+                        <p className="text-[13.5px] font-semibold leading-relaxed">
+                          {meetingInvite.orgName ? `${meetingInvite.orgName} meeting started` : "Meeting started"}
+                        </p>
+                        {isEndedInvite ? (
+                          <div
+                            className="mt-2 inline-flex h-8 items-center rounded-lg px-3 text-[12px] font-semibold"
+                            style={
+                              isMe
+                                ? {
+                                    background: "rgba(255,255,255,0.16)",
+                                    color: "rgba(255,255,255,0.85)",
+                                  }
+                                : {
+                                    background: "rgba(220, 38, 38, 0.1)",
+                                    color: "var(--color-error, #dc2626)",
+                                  }
+                            }
+                          >
+                            Meeting ended
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onJoinMeeting(meetingInvite.meetingId)}
+                            className="mt-2 inline-flex h-8 items-center rounded-lg px-3 text-[12px] font-semibold transition hover:opacity-90"
+                            style={
+                              isMe
+                                ? {
+                                    background: "rgba(255,255,255,0.2)",
+                                    color: "#fff",
+                                  }
+                                : {
+                                    background: "var(--color-brand-subtle, #ede9f8)",
+                                    color: "var(--color-brand, #6e49b6)",
+                                  }
+                            }
+                          >
+                            Join Meeting
+                          </button>
+                        )}
+                      </div>
+                    ) : meetingEnded ? (
+                      <div
+                        className="px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed"
+                        style={
+                          isMe
+                            ? {
+                                background:
+                                  "linear-gradient(135deg, var(--color-brand, #6e49b6), var(--color-brand-deep, #4a2d8c))",
+                                color: "#fff",
+                                borderRadius: "18px 18px 4px 18px",
+                              }
+                            : {
+                                background: "rgba(220, 38, 38, 0.08)",
+                                color: "var(--color-error, #b91c1c)",
+                                border: "1px solid rgba(220, 38, 38, 0.15)",
+                                borderRadius: "4px 18px 18px 18px",
+                              }
+                        }
+                      >
+                        <p className="font-semibold">{meetingEnded.orgName ? `${meetingEnded.orgName} meeting ended` : "Meeting ended"}</p>
+                      </div>
+                    ) : msg.content ? (
                       <div
                         className="px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed"
                         style={
@@ -141,7 +279,7 @@ export default function OrgChatMessages({ messages, currentUserId }: Props) {
                       >
                         {msg.content}
                       </div>
-                    )}
+                    ) : null}
 
                     {/* File attachments */}
                     {msg.files && msg.files.length > 0 && (
