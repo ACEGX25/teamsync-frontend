@@ -10,7 +10,13 @@ import RecentMessages from "@/components/dashboard/RecentMessages";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import StatsRow from "@/components/dashboard/StatsRow";
 import PageRenderer from "@/shared/PageRenderer";
-import { authApi, type AuthUser } from "@/utils/api";
+import {
+  authApi,
+  meetingApi,
+  orgApi,
+  type AuthUser,
+  type Organization,
+} from "@/utils/api";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -18,10 +24,69 @@ export default function DashboardPage() {
   const [active, setActive] = useState("dashboard");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [startingMeeting, setStartingMeeting] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [meetingMode, setMeetingMode] = useState<"personal" | "organization">("personal");
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>("");
+  const [loadingOrganizations, setLoadingOrganizations] = useState(false);
 
-  const handleStartMeeting = () => {
-    const generatedId = crypto.randomUUID();
-    router.push(`/authenticated/meeting?meetingId=${generatedId}`);
+  const getOrganizationId = (org: Organization): number => org.id ?? org.orgId;
+
+  const openMeetingModal = async () => {
+    setShowMeetingModal(true);
+    setMeetingMode("personal");
+    setSelectedOrganizationId("");
+
+    try {
+      setLoadingOrganizations(true);
+      const orgs = await orgApi.getMyOrganizations();
+      const mapped = (Array.isArray(orgs) ? orgs : []).map((org) => ({
+        ...org,
+        id: getOrganizationId(org),
+      }));
+      setOrganizations(mapped);
+      if (mapped.length > 0) {
+        setSelectedOrganizationId(String(getOrganizationId(mapped[0])));
+      }
+    } catch {
+      setOrganizations([]);
+      setSelectedOrganizationId("");
+    } finally {
+      setLoadingOrganizations(false);
+    }
+  };
+
+  const handleStartMeeting = async () => {
+    if (startingMeeting) return;
+    if (!user) {
+      alert("User details not loaded yet. Please try again.");
+      return;
+    }
+
+    const sourceType = meetingMode === "personal" ? "dm" : "channel";
+    const sourceId =
+      meetingMode === "personal"
+        ? user.userId
+        : Number(selectedOrganizationId);
+
+    if (!sourceId) {
+      alert("Please select an organization first.");
+      return;
+    }
+
+    try {
+      setStartingMeeting(true);
+
+      const meeting = await meetingApi.createMeeting(sourceType, sourceId);
+      setShowMeetingModal(false);
+      router.push(`/meeting/${meeting.meetingId}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to start meeting";
+      alert(message);
+    } finally {
+      setStartingMeeting(false);
+    }
   };
 
   useEffect(() => {
@@ -98,6 +163,84 @@ export default function DashboardPage() {
           />
         </main>
       </div>
+
+      {showMeetingModal && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="w-full max-w-[460px] rounded-3xl border border-[var(--color-divider)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-db-hero)]">
+            <h3 className="text-[18px] font-bold tracking-[-0.02em] text-[var(--color-text-primary)]">
+              Start a meeting
+            </h3>
+
+            <p className="mt-3 text-sm font-semibold text-[var(--color-text-secondary)]">Start as:</p>
+
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setMeetingMode("personal")}
+                className={`rounded-xl border px-3 py-2 text-sm font-semibold ${meetingMode === "personal"
+                    ? "border-[var(--color-brand-light)] bg-[var(--color-brand-xsubtle)] text-[var(--color-brand-deep)]"
+                    : "border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[var(--color-text-primary)]"
+                  }`}
+              >
+                Personal Meeting
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMeetingMode("organization")}
+                className={`rounded-xl border px-3 py-2 text-sm font-semibold ${meetingMode === "organization"
+                    ? "border-[var(--color-brand-light)] bg-[var(--color-brand-xsubtle)] text-[var(--color-brand-deep)]"
+                    : "border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] text-[var(--color-text-primary)]"
+                  }`}
+              >
+                Select an Organization
+              </button>
+            </div>
+
+            {meetingMode === "organization" && (
+              <div className="mt-4">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
+                  Organization
+                </label>
+                <select
+                  value={selectedOrganizationId}
+                  onChange={(e) => setSelectedOrganizationId(e.target.value)}
+                  disabled={loadingOrganizations || organizations.length === 0}
+                  className="w-full rounded-xl border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none"
+                >
+                  {organizations.length === 0 ? (
+                    <option value="">{loadingOrganizations ? "Loading organizations..." : "No organizations found"}</option>
+                  ) : (
+                    organizations.map((organization) => (
+                      <option key={getOrganizationId(organization)} value={getOrganizationId(organization)}>
+                        {organization.orgName}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowMeetingModal(false)}
+                className="rounded-xl border border-[var(--color-input-border)] bg-[var(--color-landing-input-bg)] px-4 py-2 text-sm font-semibold text-[var(--color-text-primary)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleStartMeeting}
+                disabled={startingMeeting || (meetingMode === "organization" && !selectedOrganizationId)}
+                className="rounded-xl border border-[var(--color-brand-light)] bg-[var(--color-brand-xsubtle)] px-4 py-2 text-sm font-semibold text-[var(--color-brand-deep)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {startingMeeting ? "Starting..." : "Start Meeting"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

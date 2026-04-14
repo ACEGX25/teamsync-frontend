@@ -1,5 +1,11 @@
 import LoginPage from "@/components/auth/loginpage";
 
-export default function Page() {
-  return <LoginPage />;
+interface LoginRouteProps {
+  searchParams?: {
+    next?: string;
+  };
+}
+
+export default function Page({ searchParams }: LoginRouteProps) {
+  return <LoginPage redirectTo={searchParams?.next} />;
 }

@@ -11,17 +11,17 @@ export default function Sidebar({ collapsed, active, onNavClick }: SidebarProps)
   return (
     <aside className={`relative flex shrink-0 flex-col overflow-hidden border-r border-(--color-divider) bg-(--color-surface-frost) backdrop-blur-md transition-[width,min-width] duration-300 ${collapsed ? "w-16 min-w-16" : "w-[220px] min-w-[220px]"}`}>
       <nav className="flex flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto px-2.5 py-4">
-        <button
+        {/* <button
           title={collapsed ? "Invite Members" : undefined}
           className={`group mb-1.5 mt-2 inline-flex items-center gap-2.5 rounded-2xl border border-transparent bg-linear-to-r from-(--color-brand) to-(--color-brand-deep) px-4 py-3 text-sm font-semibold text-[var(--color-surface)] shadow-[var(--shadow-shell-cta)] transition hover:-translate-y-0.5 hover:opacity-95 ${collapsed ? "justify-center" : "justify-start"}`}
         >
           <UserPlus size={15} strokeWidth={2.5} className="shrink-0" />
           {!collapsed && <span>Invite Members</span>}
-        </button>
+        </button> */}
 
-        {!collapsed && (
+        {/* {!collapsed && (
           <div className="mx-2 my-2 h-px shrink-0 bg-(--color-divider)" />
-        )}
+        )} */}
 
         {NAV_MAIN.map((item) => {
           const isActive = active === item.id;

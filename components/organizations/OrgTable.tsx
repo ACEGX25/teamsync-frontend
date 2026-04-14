@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Loader2, Calendar, Trash2, Users } from "lucide-react"; // Added Trash2 and Users
+import { Loader2, Calendar, Trash2, MessageSquare, Search } from "lucide-react";
 import type { Organization } from "@/utils/api";
-import OrgMembersPanel from "./OrgMembersPanel";
 
 interface Props {
   orgs: Organization[];
@@ -12,11 +10,18 @@ interface Props {
   search: string;
   onSearchChange: (v: string) => void;
   onDelete: (orgId: number) => void;
+  onViewChat: (org: Organization) => void;
 }
 
-export default function OrgTable({ orgs, loading, error, search, onSearchChange, onDelete }: Props) {
-  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
-
+export default function OrgTable({
+  orgs,
+  loading,
+  error,
+  search,
+  onSearchChange,
+  onDelete,
+  onViewChat,
+}: Props) {
   const filtered = orgs.filter((o) =>
     o.orgName.toLowerCase().includes(search.toLowerCase())
   );
@@ -29,99 +34,127 @@ export default function OrgTable({ orgs, loading, error, search, onSearchChange,
   ];
 
   return (
-    <div>
-      {/* Search Input remains the same... */}
-      <div className="relative mb-4">
-        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--color-text-muted)" }} />
-        <input
-          type="text"
-          placeholder="Search organizations..."
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full rounded-xl py-2.5 pl-9 pr-4 text-[13.5px] outline-none transition"
-          style={{ border: "1px solid var(--color-divider)", background: "var(--color-surface-frost)", color: "var(--color-text-primary)" }}
-        />
+    <div
+      className="rounded-[20px] overflow-hidden border-[1px] border-solid border-[var(--color-divider)] bg-[var(--color-db-surface-glass)] backdrop-blur-[2px] shadow-[var(--shadow-db-card)]"
+    >
+      {/* Toolbar — compact search pinned to the right */}
+      <div
+        className="flex items-center justify-end px-5 py-3 border-b border-b-[var(--color-divider)]"
+      >
+        <div className="relative flex items-center">
+          <Search
+            size={13}
+            className="absolute left-3 pointer-events-none text-[var(--color-text-muted)]"
+          />
+          <input
+            type="text"
+            placeholder="Search organizations..."
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="rounded-xl py-1.5 pl-8 pr-3 text-[13px] outline-none transition w-[220px] border border-[var(--color-divider)] bg-[var(--color-surface-frost)] text-[var(--color-text-primary)]"
+          />
+          {search && (
+            <button
+              onClick={() => onSearchChange("")}
+              className="absolute right-2.5 text-[11px] px-1.5 py-0.5 rounded transition text-[var(--color-text-muted)] bg-[var(--color-brand-xsubtle)]"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
-      <div
-        className="rounded-[20px] overflow-hidden"
-        style={{ border: "1px solid var(--color-divider)", background: "var(--color-db-surface-glass)", backdropFilter: "blur(2px)", boxShadow: "var(--shadow-db-card)" }}
-      >
-        {loading ? (
-          <div className="flex items-center justify-center py-16 text-[13px]"><Loader2 size={16} className="animate-spin" /></div>
-        ) : (
-          <table className="w-full text-[13.5px]">
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--color-divider)" }}>
-                {["Organization", "Members", "Created", "Actions"].map((h) => (
-                  <th
-                    key={h}
-                    className={`py-3 px-5 font-medium text-[11px] uppercase tracking-wider ${h === "Actions" ? "text-right" : "text-left"}`}
-                    style={{ color: "var(--color-text-muted)" }}
-                  >
-                    {h}
-                  </th>
-                ))}
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-[13px]">
+          <Loader2 size={16} className="animate-spin" />
+        </div>
+      ) : (
+        <table className="w-full text-[15px]">
+          <thead>
+            <tr className="bg-[var(--color-brand-xsubtle)] border-b-2 border-b-[var(--color-brand-subtle)]">
+              {["Organization", "Members", "Created", "Actions"].map((h) => (
+                <th
+                  key={h}
+                  className={`py-5 px-5 font-bold text-[13px] uppercase tracking-widest text-[var(--color-brand-deep)] ${
+                    h === "Actions" ? "text-right" : "text-left"
+                  }`}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="py-12 text-center text-[13px] text-[var(--color-text-muted)]"
+                >
+                  No organizations found.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.map((org, i) => {
+            ) : (
+              filtered.map((org, i) => {
                 const color = avatarColors[i % avatarColors.length];
                 return (
                   <tr
                     key={org.id ?? i}
-                    className="transition-colors group"
-                    style={i !== filtered.length - 1 ? { borderBottom: "1px solid var(--color-divider)" } : {}}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-brand-xsubtle)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    className={`transition-colors group hover:bg-[var(--color-brand-xsubtle)] ${
+                      i !== filtered.length - 1 ? "border-b border-[var(--color-divider)]" : ""
+                    }`}
                   >
-                    <td className="px-5 py-3.5">
+                    {/* Org name */}
+                    <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: color.bg, color: color.text }}>
+                        <div
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-bold shrink-0"
+                          style={{ background: color.bg, color: color.text }}
+                        >
                           {org.orgName[0].toUpperCase()}
                         </div>
-                        <span className="font-semibold" style={{ color: "var(--color-text-primary)" }}>{org.orgName}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5" style={{ color: "var(--color-text-secondary)" }}>{org.memberCount ?? "—"}</td>
-                    <td className="px-5 py-3.5" style={{ color: "var(--color-text-secondary)" }}>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar size={12} style={{ color: "var(--color-text-muted)" }} />
-                        {org.createdAt ? new Date(org.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                        <span className="font-semibold text-[var(--color-text-primary)]">
+                          {org.orgName}
+                        </span>
                       </div>
                     </td>
 
-                    {/* ACTIONS COLUMN */}
-                    <td className="px-5 py-3.5">
+                    {/* Member count */}
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">
+                      {org.memberCount ?? "—"}
+                    </td>
+
+                    {/* Created date */}
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar
+                          size={12}
+                          className="text-[var(--color-text-muted)]"
+                        />
+                        {org.createdAt
+                          ? new Date(org.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "—"}
+                      </div>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        {/* View Members Button */}
                         <button
-                          onClick={() => setSelectedOrg(org)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition"
-                          style={{ background: "var(--color-brand-subtle)", color: "var(--color-brand-deep)" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
-                          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                          onClick={() => onViewChat(org)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition bg-[var(--color-brand-subtle)] text-[var(--color-brand-deep)] hover:opacity-80"
                         >
-                          <Users size={14} />
+                          <MessageSquare size={13} />
                           View
                         </button>
 
-                        {/* Delete Button */}
                         <button
-                            onClick={() => {
-    console.log("Deleting Org with ID:", org.orgId); // Debug: Check if this is undefined
-    onDelete(org.orgId); // Ensure this matches your schema property 'orgId'
-  }}
-                          className="p-1.5 rounded-lg transition"
-                          style={{ color: "var(--color-text-muted)" }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "var(--color-error-bg)";
-                            e.currentTarget.style.color = "var(--color-error)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
-                            e.currentTarget.style.color = "var(--color-text-muted)";
-                          }}
+                          onClick={() => onDelete(org.orgId)}
+                          className="p-1.5 rounded-lg transition text-[var(--color-text-muted)] hover:bg-[var(--color-error-bg)] hover:text-[var(--color-error)]"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -129,18 +162,10 @@ export default function OrgTable({ orgs, loading, error, search, onSearchChange,
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {selectedOrg && (
-        <OrgMembersPanel
-          orgId={selectedOrg.id}
-          orgName={selectedOrg.orgName}
-          onClose={() => setSelectedOrg(null)}
-        />
+              })
+            )}
+          </tbody>
+        </table>
       )}
     </div>
   );

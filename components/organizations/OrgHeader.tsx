@@ -6,29 +6,32 @@ interface Props {
 
 export default function OrgHeader({ onNew }: Props) {
   return (
-    <div className="flex items-center justify-between mb-8">
-      <div>
-        <h1
-          className="text-[28px] font-bold tracking-[-0.04em] text-[var(--color-text-primary)]"
-          style={{ fontFamily: "var(--font-display)" }}
+    <div className="w-full px-8 pt-8 pb-6">
+      <div className="flex items-start justify-between gap-6">
+        {/* Left — eyebrow + title + subtitle */}
+        <div className="flex flex-col gap-2 max-w-lg">
+          <p className="text-[11px] font-semibold tracking-[0.15em] uppercase text-[var(--color-brand)]">
+            Workspace Overview
+          </p>
+          <h1 className="text-[50px] font-bold leading-[1.1] tracking-[-0.03em] text-[var(--color-text-primary)] font-[family-name:var(--font-display)]">
+            Organization Hub
+          </h1>
+          <p className="text-[14px] leading-[1.6] text-[var(--color-text-secondary)] mt-1">
+            Manage your enterprise ecosystem. Coordinate cross-functional
+            channels, monitor active memberships, and streamline
+            organizational flow.
+          </p>
+        </div>
+
+        {/* Right — CTA */}
+        <button
+          onClick={onNew}
+          className="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-95 active:scale-95 flex-shrink-0 mt-6 bg-[image:linear-gradient(135deg,var(--color-brand),var(--color-brand-deep))] shadow-[var(--shadow-shell-cta)]"
         >
-          Organizations
-        </h1>
-        <p className="mt-1 text-[13.5px] text-[var(--color-text-secondary)]">
-          Manage and monitor your organizations
-        </p>
+          <Plus size={16} strokeWidth={2.5} />
+          Create Organization
+        </button>
       </div>
-      <button
-        onClick={onNew}
-        className="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:opacity-95 active:scale-95"
-        style={{
-          background: "linear-gradient(135deg, var(--color-brand), var(--color-brand-deep))",
-          boxShadow: "var(--shadow-shell-cta)",
-        }}
-      >
-        <Plus size={15} strokeWidth={2.5} />
-        New Organization
-      </button>
     </div>
   );
 }

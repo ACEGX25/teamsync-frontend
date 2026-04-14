@@ -10,10 +10,23 @@ import ForgotPassword from "../auth/ForgotPassword";
 
 type Step = "landing" | "verify" | "secure" | "login" | "forgot";
 
-export default function LoginPage() {
+function sanitizeRedirectTo(redirectTo?: string) {
+  if (!redirectTo || !redirectTo.startsWith("/")) {
+    return "/authenticated/dashboard";
+  }
+
+  return redirectTo;
+}
+
+interface LoginPageProps {
+  redirectTo?: string;
+}
+
+export default function LoginPage({ redirectTo }: LoginPageProps) {
   const router = useRouter();
   const [step, setStep]   = useState<Step>("landing");
   const [email, setEmail] = useState("");
+  const nextRoute = sanitizeRedirectTo(redirectTo);
 
   const handleNext = (email: string, nextStep?: Step) => {
     setEmail(email);
@@ -35,7 +48,7 @@ export default function LoginPage() {
   return (
     <StepLogin
       email={email}
-      onNext={() => router.push("/authenticated/dashboard")}
+      onNext={() => router.push(nextRoute)}
       onBack={() => setStep("landing")}
       onForgot={() => setStep("forgot")}
     />
